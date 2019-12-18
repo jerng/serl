@@ -101,27 +101,95 @@ export class Proc {
 
         // TODO: do we need to validate argument types here?
 
-        this.nodeIndex  = Node.nodeIndexFromNodeName ( localNode, nodeName)
-        this.pid        = new Pid (this.nodeIndex, procIndex)
-        this.mailbox    = []
+        // TODO: would performance improve if these were static methods? 
+
+        this.nodeIndex      = Node.nodeIndexFromNodeName ( localNode, nodeName)
+        this.pid            = new Pid (this.nodeIndex, procIndex)
+        this.mailbox        = []
+        this.mailHandler    = this.defaultMailHandler
     }
     toString () {
         return `[object Proc<${this.pid.nodeIndex}.${this.pid.procIndex}>]`
     }
-    receive () {
-        // The current implementation will receive a message, but it does not do
-        // anything if the message is unmatched (while Erlang's 'receive' is a
-        // guarded function, the current implementation does not require
-        // guards). So either we add guards here, or deviate from the way Erlang
-        // works.
+    defaultMailHandler ( message ) {
+        console.log( `    defaultMailHandler received a message` )
+        this.mailbox.push ( message )
+            // When the next messages come in, they
+            // will be held in this.mailbox in their
+            // order of arrival. No attempt is made
+            // to match them to any further logical
+            // branches.
+    }
+    receive ( branches ) {
+
+        // TODO: rename 'mailHandler' to mailman, 'branches' 
+
+        // TODO:    typecheck 'branches'?
 
         console.log (`NEWS, ${this}.RECEIVE(): called`)
-        let p = new Promise ( (res,rej)=>{
+
+
+//  TODO TODO TODO Somewhere around here, we want to check if the mailbox is
+//  empty then run the logic on it.
+
+
+
+        let p = new Promise ( (resolve, reject) => {
 
                 // console.log (`NEWS, promiseExec(): called`)
-                this.mailHandler = message => {
-                    this.mailbox.push ( message )
-                    res ( message) 
+                this.mailHandler = m => {
+
+                    this.mailbox.push ( m )
+                        //  New messages are not always evaluated first.
+
+                    //  Oldest messages are always evaluated first.
+                    let messageMatched  =   false
+                    let messageIndex    =   0
+                    check_entire_mailbox: for ( const message of this.mailbox ) {
+                        match_message_to_reaction: for ( const r of branches ) {
+
+                            // Essential framework conventions
+                            let match   = r[0]
+                            let branch  = r[1]
+
+                            if ( match( message ) ) {
+                                console.log (`    customised mailHandler() MATCHED a message`)
+
+                                messageMatched = true
+                                this.mailbox.splice ( messageIndex, 1 )
+
+                                this.mailHandler = this.defaultMailHandler
+                                    // This must be done before resolve() so that
+                                    // control is passed back to the proc's fn
+                                    // body only after the proc.mailHandler has been
+                                    // modified to perform safekeeping.
+
+                                let returnedByBranch = branch (message)
+                                
+                                console.log(
+                                `    returnedByBranch: [[${returnedByBranch}]],
+                                typeof ${typeof returnedByBranch}`)
+
+                                resolve (returnedByBranch)
+                                //resolve ( branch ( message ) )
+                                    // Promise Resolved
+                                
+                                break check_entire_mailbox
+                            }
+                            console.log (`    customised mailHandler() tried to match a
+                                message; failed`)
+                        }
+                        messageIndex ++ 
+                    }
+                    if ( messageMatched ) {
+                        // res ( m ) 
+                    } else {
+                        console.log (`    customised mailHandler() tried to match a
+                            message; failed all`)
+                        // leave m in the mailbox, do not resolve; do not
+                        // reject; if we need to reject, then we need to add
+                        // another promise around this one...
+                    }
                 }
 
                         // if you call proc.receive( x ),   OK
