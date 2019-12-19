@@ -194,7 +194,7 @@ try { console.log ( `OK: CODE [[
                 awaited1}`)
 
             console.log (`NEWS, F1: awaited2 is [[${awaited2}]] type: ${typeof
-                awaited1}`)
+                awaited2}`)
 
 
         } 

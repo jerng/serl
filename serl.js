@@ -5,6 +5,8 @@
 
 'use strict'
 
+// TODO: proxy the 'console' object so that we can toggle debug levels
+
 // This is chosen over an (export default) expression for explicitness:
 //
 export class Node {
@@ -112,7 +114,7 @@ export class Proc {
         return `[object Proc<${this.pid.nodeIndex}.${this.pid.procIndex}>]`
     }
     defaultMailHandler ( message ) {
-        console.log( `    defaultMailHandler received a message` )
+        //console.log( `    defaultMailHandler received a message` )
         this.mailbox.push ( message )
             // When the next messages come in, they
             // will be held in this.mailbox in their
@@ -122,17 +124,11 @@ export class Proc {
     }
     receive ( branches ) {
 
-        // TODO: rename 'mailHandler' to mailman, 'branches' 
+        // TODO: rename 'mailHandler' to mailman?
 
         // TODO:    typecheck 'branches'?
 
-        console.log (`NEWS, ${this}.RECEIVE(): called`)
-
-
-//  TODO TODO TODO Somewhere around here, we want to check if the mailbox is
-//  empty then run the logic on it.
-
-
+        //console.log (`NEWS, ${this}.RECEIVE(): called`)
 
         let p = new Promise ( (resolve, reject) => {
 
@@ -153,7 +149,7 @@ export class Proc {
                             let branch  = r[1]
 
                             if ( match( message ) ) {
-                                console.log (`    customised mailHandler() MATCHED a message`)
+                                //console.log (`    customised mailHandler() MATCHED a message`)
 
                                 messageMatched = true
                                 this.mailbox.splice ( messageIndex, 1 )
@@ -166,39 +162,38 @@ export class Proc {
 
                                 let returnedByBranch = branch (message)
                                 
-                                console.log(
-                                `    returnedByBranch: [[${returnedByBranch}]],
-                                typeof ${typeof returnedByBranch}`)
+                                //console.log(
+                                //`    returnedByBranch: [[${returnedByBranch}]],
+                                //typeof ${typeof returnedByBranch}`)
 
                                 resolve (returnedByBranch)
-                                //resolve ( branch ( message ) )
                                     // Promise Resolved
                                 
                                 break check_entire_mailbox
                             }
-                            console.log (`    customised mailHandler() tried to match a
-                                message; failed`)
+                            //console.log (`    customised mailHandler() tried to match a
+                            //    message; failed`)
                         }
                         messageIndex ++ 
                     }
-                    if ( messageMatched ) {
-                        // res ( m ) 
-                    } else {
-                        console.log (`    customised mailHandler() tried to match a
-                            message; failed all`)
-                        // leave m in the mailbox, do not resolve; do not
-                        // reject; if we need to reject, then we need to add
-                        // another promise around this one...
-                    }
                 }
-
-                        // if you call proc.receive( x ),   OK
-                        // then x will be pushed
-                        // into proc.mailbox,               OK
-                        // and proc.receive will
-                        // resolve its promise that is being awaited in proc's
-                        // function body... and the logic in proc's function
-                        // body will proceed...             OK 
+                // if you call proc.receive( x ),   OK
+                // then x will be pushed
+                // into proc.mailbox,               OK
+                // and proc.receive will
+                // resolve its promise that is being awaited in proc's
+                // function body... and the logic in proc's function
+                // body will proceed...             OK 
+                
+                if ( this.mailbox.length ) {
+                    this.mailHandler ( this.mailbox.pop() )
+                }
+                // this.mailHandler has now been customised, if there are any
+                // messages in the mailbox, pop the last one, m, then call
+                // this.mailHandler on it... ( which pushes m in at the top of
+                // the stack, then starts checking through messages from the
+                // bottom of the stack for matches in the mailHandler logic.)
+                // TODO: review - really not sure if this is a performance leak.
         } )
 
         //console.log (`NEWS, RECEIVE(): will now return... `)
