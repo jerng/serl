@@ -49,7 +49,7 @@ export class Node {
     // TODO: implement the 'undefined function' error
     // TODO: refer to 'dynamic module loading' and module objects later 
     spawn () {
-        let nodeName, procIndex, newProc, fun
+        let nodeName, procIndex, newProc, module, fun, funArgs
         switch (arguments.length) {
             case 0:
                 throw Error( 'Node.spawn/0 called; no implementation.' )
@@ -58,21 +58,60 @@ export class Node {
             case 1:
 
                 //  http://erlang.org/doc/man/erlang.html#spawn-1
-                //  Expect a function.
+
                 if ( typeof arguments[0] != 'function' ) { 
                     throw Error( 'Node.spawn/1 called with a non-function' ) 
                 }
+                    //  Expect a function.
 
                 nodeName    = this.name
                 procIndex   = ++this.procMap.counter
                 fun         = arguments[0]
+
+                newProc     = new Proc ( nodeName, procIndex, this )
+                newProc.fun = fun
+                    // So now, 'this' in fun's body will refer to newProc
+
+                this.procMap.set ( newProc.pid, newProc )
+                newProc.fun()
                 break
 
             case 2:
                 throw Error( 'Node.spawn/2 called; no implementation.' )
                 break
             case 3:
-                throw Error( 'Node.spawn/3 called; no implementation.' )
+                //  http://erlang.org/doc/man/erlang.html#spawn-3
+
+                if ( typeof arguments[0] != 'object' ) { 
+                    throw Error( `Node.spawn/3, arguments[0] called with a
+                        non-object (expecting the module-object)` ) 
+                }
+                    //  TODO: how do we further test for MODULE  objects?
+
+                if ( typeof arguments[1] != 'string' ) { 
+                    throw Error( `Node.spawn/3, arguments[1] called with a
+                        non-string (expecting the method name as a string` ) 
+                }
+                    //  Expect a function.
+
+                if ( ! Array.isArray( arguments[2] ) ) { 
+                    throw Error( `Node.spawn/3, arguments[2] called with a
+                        non-array (expecting arguments for fun as an array)` ) 
+                }
+                    //  Expect an Array.
+
+                nodeName        = this.name
+                procIndex       = ++this.procMap.counter
+                module          = arguments[0]
+                fun             = module[arguments[1]]
+                funArgs    = arguments[2]
+
+                newProc     = new Proc ( nodeName, procIndex, this )
+                newProc.fun = fun
+                    // So now, 'this' in fun's body will refer to newProc
+
+                this.procMap.set ( newProc.pid, newProc )
+                newProc.fun ( ... funArgs )
                 break
             case 4:
                 throw Error( 'Node.spawn/4 called; no implementation.' )
@@ -84,12 +123,6 @@ export class Node {
                 throw Error( 'Node.spawn/(>5) called; no implementation.' )
         }
 
-        newProc     = new Proc ( nodeName, procIndex, this )
-        newProc.fun = fun
-            // So now, 'this' in fun's body will refer to newProc
-        this.procMap.set ( newProc.pid, newProc )
-
-        newProc.fun()
         return newProc.pid
 
     } // method Node.spawn
@@ -105,6 +138,7 @@ export class Proc {
 
         // TODO: would performance improve if these were static methods? 
 
+        this.node           = localNode // TODO: review, do we want this here?
         this.nodeIndex      = Node.nodeIndexFromNodeName ( localNode, nodeName)
         this.pid            = new Pid (this.nodeIndex, procIndex)
         this.mailbox        = []
@@ -113,24 +147,53 @@ export class Proc {
     toString () {
         return `[object Proc<${this.pid.nodeIndex}.${this.pid.procIndex}>]`
     }
-    defaultMailHandler ( message ) {
+    defaultMailHandler ( msg ) {
         //console.log( `    defaultMailHandler received a message` )
-        this.mailbox.push ( message )
+        this.mailbox.push ( msg )
             // When the next messages come in, they
             // will be held in this.mailbox in their
             // order of arrival. No attempt is made
             // to match them to any further logical
             // branches.
     }
+    send ( dest, msg ) {
+        // TODO: we need to validate all first parameter arguments
+
+        switch (arguments.length) {
+            case 0:
+                throw Error( 'Proc.send/0 called; no implementation.' )
+                break
+            case 1:
+                throw Error( 'Proc.send/1 called; no implementation.' )
+                break
+            case 2:
+                if ( ! ( dest instanceof Pid ) ) {
+                    throw Error (`Proc.send/2 called, first argument was not an
+                        instance of Pid`)
+                }
+                console.log(`    ${this}.send/2: supposed to send a message to ${dest}`)
+                this.node.procMap.get ( dest ).mailHandler ( msg )
+                 
+                break
+            default:
+                throw Error( 'Proc.send/>2 called; no implementation.' )
+                break
+        }
+
+    }
     receive ( branches ) {
 
         // TODO: rename 'mailHandler' to mailman?
 
-        // TODO:    typecheck 'branches'?
+        // TODO:    typecheck 'branches'? Should be iterable. Currently expects
+        //          type: [ [ 'function', 'function'] ]
+        //
+        //          Perhaps allow type: [ 'function', 'function' ] ?
+        //          Perhaps allow type: 'function' where this is just the branch?
 
         //console.log (`NEWS, ${this}.RECEIVE(): called`)
 
-        let p = new Promise ( (resolve, reject) => {
+        let prom = new Promise ( (resolve, reject) => {
 
                 // console.log (`NEWS, promiseExec(): called`)
                 this.mailHandler = m => {
@@ -141,14 +204,14 @@ export class Proc {
                     //  Oldest messages are always evaluated first.
                     let messageMatched  =   false
                     let messageIndex    =   0
-                    check_entire_mailbox: for ( const message of this.mailbox ) {
-                        match_message_to_reaction: for ( const r of branches ) {
+                    check_entire_mailbox: for ( const msg of this.mailbox ) {
+                        match_message_to_reaction: for ( const b of branches ) {
 
                             // Essential framework conventions
-                            let match   = r[0]
-                            let branch  = r[1]
+                            let match   = b[0]
+                            let branch  = b[1]
 
-                            if ( match( message ) ) {
+                            if ( match ( msg ) ) {
                                 //console.log (`    customised mailHandler() MATCHED a message`)
 
                                 messageMatched = true
@@ -160,7 +223,7 @@ export class Proc {
                                     // body only after the proc.mailHandler has been
                                     // modified to perform safekeeping.
 
-                                let returnedByBranch = branch (message)
+                                let returnedByBranch = branch ( msg )
                                 
                                 //console.log(
                                 //`    returnedByBranch: [[${returnedByBranch}]],
@@ -197,7 +260,7 @@ export class Proc {
         } )
 
         //console.log (`NEWS, RECEIVE(): will now return... `)
-        return p
+        return prom
     }
         /*  Text:           https://erlangbyexample.org/send-receive
             Illustrated:    https://learnyousomeerlang.com/more-on-multiprocessing

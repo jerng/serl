@@ -203,17 +203,21 @@ try { console.log ( `OK: CODE [[
 
         console.log (`NEWS-3.4: AFTER F1, sending the message '{1:"should not match"}'...`) 
         proc.mailHandler ( {1:"should not match"} )
+            // User should never send messages like this.
 
         console.log (`NEWS-3.4: AFTER F1, sending the message '{2:"should not match"}'...`) 
         proc.mailHandler ( {2:"should not match"} )
+            // User should never send messages like this.
         console.log (proc.mailbox)
 
         console.log (`NEWS-3.4: AFTER F1, sending the message 'ohai'...`) 
         proc.mailHandler ( 'ohai' )
+            // User should never send messages like this.
         console.log (proc.mailbox)
 
         console.log (`NEWS-3.4: AFTER F1, sending the message '()=>{}'...`) 
         proc.mailHandler ( ()=>{} )
+            // User should never send messages like this.
         console.log (proc.mailbox)
 
 })() }]]` ) } catch (e) { console.error(e) } finally {console.log('] - - ')}
@@ -222,12 +226,77 @@ console.error ( `[TEST #7 : process link interaction, unimplemented`)
 console.error ( `[TEST #8 : process exit signals interaction, unimplemented`)
 console.error ( `[TEST #9 : process monitoring interaction, unimplemented`)
 
-console.log ( `[TEST #3.5 : how do processes send messages?`); try { console.log ( `OK: CODE [[  
+console.log ( `[TEST #3.5 : how do processes send messages `); try { console.log ( `OK: CODE [[  
 
     ]] RETURNED [[${(()=>{
 
-        return x
+        let n       =   new Serl.Node ('test3.5')
+        let f1      =   async function (){
+            let awaited1    = await this.receive([
+                [   ()=>true, 
+                        // simplest blind guard, until we improve Proc.receive
+                        // TODO
+                    m => m
+                        // identity function
+                ]               
+            ])
+            console.log ( `NEWS-3.5, f1 body, (awaited1) value: [[${awaited1}]],
+                type: [[${typeof awaited1}]]` ) 
+        }
+        let f1b      =   async function (){
+
+            let f1bNamed   =   async function (){
+                let awaited1b    = await this.receive([
+                    [   ()=>true, 
+                            // simplest blind guard, until we improve Proc.receive
+                            // TODO
+                        m => m
+                            // identity function
+                    ]               
+                ])
+                console.log ( `NEWS-3.5, f1bNamed body, (awaited1) value:
+                    [[${awaited1b}]], type: [[${typeof awaited1b}]]` ) 
+       
+                f1bNamed.call (this) 
+                    // tail call to self... 'recursion'?
+                    // TODO: check if this blows the stack; if it does, do we
+                    // have to rewrite this to a while loop? to a generator
+                    // function with a yield? (IDK: need more practice)
+            } // f1bNamed
+
+            f1bNamed.call ( this )
+        } // f1b
+        let f2      =   async function ( recipientPid ){
+            console.log ( `NEWS-3.5, f2 body, row before this.send()`)
+            this.send ( recipientPid, 'ohai' )
+            this.send ( recipientPid, 'ohai again' )
+
+            let counter = 0
+            while ( counter < 100000 ) {
+                counter ++
+                this.send ( recipientPid, 'ohai' )
+            }
+        }
+
+        let pid1    =   n.spawn ( f1b )
+
+        let mod2    =   { f2: f2 }
+        let pid2    =   n.spawn ( mod2, 'f2', [pid1] )
+
+        //let proc1   =   n.procMap.get(pid1) 
+        //let proc2   =   n.procMap.get(pid2) 
+       
+        //proc1.mailHandler ( 'ohai' )
+            // User should never send messages like this.
+
+        return 'placeholder'
+
 })() }]]` ) } catch (e) { console.error(e) } finally {console.log('] - - ')}
+console.error (`WARNING: 3.5, here f1bNamed makes a tail-call to itself, but it is
+not clear that this will not blow the call-stack; see note at f1bNamed; check`)
+
+
+
 
 /* template test (NO-expected-error):
 
