@@ -128,7 +128,7 @@ console.log ( `[TEST #5.1 : how readable is the Proc's .toString()?` ); try { co
 
 console.error ( `[TEST #6 : what happens to procMap and its counter when processes are removed? What happens when processes are stopped?]` )
 
-console.log ( `[TEST #3.4 : how shall we implement send/receive interaction?`)
+console.log ( `[TEST #3.4 : how do processes receive messages?`)
 console.error (`3.4: break this up into a series of small tests`)
     //  Code it here, then move it to serl.js
     //
@@ -137,16 +137,10 @@ console.error (`3.4: break this up into a series of small tests`)
     //  If fun DOES call Serl.Proc.receive(), then fun has to AWAIT its result,
     //  which must be a Promise
 
+let view_all_3_4 = false
 try { console.log ( `OK: CODE [[  
 
-        let n   =   new Serl.Node ('test3.4')
-        let fun =   async function(){ 
-            let message = await this.receive()
-        }
-        let pid     = n.spawn(fun)
-        let proc    = n.procMap.get(pid) 
-
-        proc.mailHandler ( 'ohai' )
+    (sorry, for now: it's pretty long, so best you look in the source)
 
     ]] RETURNED [[${(()=>{
 
@@ -155,7 +149,7 @@ try { console.log ( `OK: CODE [[
         let n   =   new Serl.Node ('test3.4')
         let F1  =   async function(){                                     
 
-            console.log (`NEWS, F1: ${this} is spawning; logging the function body
+            console.log (`NEWS-3.4, F1: ${this} is spawning; logging the function body
                 line BEFORE this.receive()'s 1st call`) 
 
             let branches = [
@@ -178,22 +172,19 @@ try { console.log ( `OK: CODE [[
             let awaited1     = await this.receive( branches )
             // F1 PAUSES HERE
 
-            console.log (`NEWS, F1: ${this}; logging the function body line
-                AFTER this.receive()'s 1st call`) 
-
-            console.log (`NEWS, F1: ${this}; logging the function body
+            view_all_3_4 && console.log (`NEWS-3.4, F1: ${this}; logging the
+                function body line AFTER this.receive()'s 1st call`) 
+            view_all_3_4 && console.log (`NEWS-3.4, F1: ${this}; logging the function body
                 line BEFORE this.receive()'s 2nd call`) 
 
             let awaited2    = await this.receive( branches )
             // F1 PAUSES HERE
 
-            console.log (`NEWS, F1: ${this}; logging the function body line
+            view_all_3_4 && console.log (`NEWS-3.4, F1: ${this}; logging the function body line
                 AFTER this.receive()'s 2nd call`) 
-
-            console.log (`NEWS, F1: awaited1 is [[${awaited1}]] type: ${typeof
+            view_all_3_4 && console.log (`NEWS-3.4, F1: awaited1 is [[${awaited1}]] type: ${typeof
                 awaited1}`)
-
-            console.log (`NEWS, F1: awaited2 is [[${awaited2}]] type: ${typeof
+            view_all_3_4 && console.log (`NEWS-3.4, F1: awaited2 is [[${awaited2}]] type: ${typeof
                 awaited2}`)
 
 
@@ -203,64 +194,40 @@ try { console.log ( `OK: CODE [[
     //  EXECUTION of F1 in a process
 
         let pid     = n.spawn(F1)
-
-        console.log (`NEWS: AFTER F1`) 
+        console.log (`NEWS-3.4: AFTER F1`) 
             // ... but this runs before Promise resolves...
 
     //  TEST: how does the process react?
 
         let proc    = n.procMap.get(pid) 
 
-        console.log (`NEWS: AFTER F1, sending the message '{1:"should not match"}'...`) 
+        console.log (`NEWS-3.4: AFTER F1, sending the message '{1:"should not match"}'...`) 
         proc.mailHandler ( {1:"should not match"} )
 
-        console.log (`NEWS: AFTER F1, sending the message '{2:"should not match"}'...`) 
+        console.log (`NEWS-3.4: AFTER F1, sending the message '{2:"should not match"}'...`) 
         proc.mailHandler ( {2:"should not match"} )
-
         console.log (proc.mailbox)
 
-        console.log (`NEWS: AFTER F1, sending the message 'ohai'...`) 
+        console.log (`NEWS-3.4: AFTER F1, sending the message 'ohai'...`) 
         proc.mailHandler ( 'ohai' )
-
         console.log (proc.mailbox)
 
-        // At this point, F1's awaited Promise is resolved. But proc.mailHandler
-        // was not unset, so mailHandler runs again (waste of CPU) before a new
-        // Promise can be attached... TODO TODO
-
-        console.log (`NEWS: AFTER F1, sending the message '()=>{}'...`) 
+        console.log (`NEWS-3.4: AFTER F1, sending the message '()=>{}'...`) 
         proc.mailHandler ( ()=>{} )
-
         console.log (proc.mailbox)
 
 })() }]]` ) } catch (e) { console.error(e) } finally {console.log('] - - ')}
-    /*  https://erlangbyexample.org/send-receive
-    
-    How does a process handle received messages?
 
-    When a process receives a message, the message is
-    appended to the mailbox.
+console.error ( `[TEST #7 : process link interaction, unimplemented`)
+console.error ( `[TEST #8 : process exit signals interaction, unimplemented`)
+console.error ( `[TEST #9 : process monitoring interaction, unimplemented`)
 
-    The receive block will try each message in the mailbox (one
-    by one), against that block's sequence of patterns, until
-    one of the messages matches a pattern.
+console.log ( `[TEST #3.5 : how do processes send messages?`); try { console.log ( `OK: CODE [[  
 
-    When there is match, the message gets removed from
-    the mailbox and the logic corresponding to the matched pattern
-    will get executed. If there is no match,
-    then that message remains in the mailbox, and the following
-    message gets tried sequentially,
-    against all of the receive block's patterns.
+    ]] RETURNED [[${(()=>{
 
-    If no messages in the mailbox match any pattern, the process,
-    having tried all messages, and having exhausted all receive
-    patterns, will get suspended until a new message arrives,
-    and the message processing logic starts all over,
-    beginning with the first message in the mailbox.
-
-    */
-
-
+        return x
+})() }]]` ) } catch (e) { console.error(e) } finally {console.log('] - - ')}
 
 /* template test (NO-expected-error):
 
