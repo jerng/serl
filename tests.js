@@ -226,13 +226,18 @@ console.error ( `[TEST #7 : process link interaction, unimplemented`)
 console.error ( `[TEST #8 : process exit signals interaction, unimplemented`)
 console.error ( `[TEST #9 : process monitoring interaction, unimplemented`)
 
-console.log ( `[TEST #3.5 : how do processes send messages `); try { console.log ( `OK: CODE [[  
+console.log ( `[TEST #3.5 : how do processes send messages? (includes 15k
+message test site) (f1a,b,c,d,e, are mutually exclusive options for testing; you
+want to read the code... f1e is the most sophisticated option`); try { console.log ( `OK: CODE [[  
 
     ]] RETURNED [[${(()=>{
 
         let n       =   new Serl.Node ('test3.5')
-        let f1      =   async function (){
-            let awaited1    = await this.receive([
+
+        // f1a is a non-recursing listener that will end after being matched to its
+        // first message.
+        let f1a      =   async function (){
+            let awaited1a    = await this.receive([
                 [   ()=>true, 
                         // simplest blind guard, until we improve Proc.receive
                         // TODO
@@ -240,12 +245,19 @@ console.log ( `[TEST #3.5 : how do processes send messages `); try { console.log
                         // identity function
                 ]               
             ])
-            console.log ( `NEWS-3.5, f1 body, (awaited1) value: [[${awaited1}]],
-                type: [[${typeof awaited1}]]` ) 
+            console.log ( `NEWS-3.5, f1a body, (awaited1a) value: [[${awaited1a}]],
+                type: [[${typeof awaited1a}]]` ) 
         }
+
+        // f1b is a recursing variation of f1a - which will match a message and
+        // then reset itself to match another message.
         let f1b      =   async function (){
 
-            let f1bNamed   =   async function (){
+            let f1bNamed   =   async function (){ 
+                //  'async'     required for 'await'
+                //  'function'  required for 'this'
+
+                this_block_can_be_lifted_1: {
                 let awaited1b    = await this.receive([
                     [   ()=>true, 
                             // simplest blind guard, until we improve Proc.receive
@@ -254,31 +266,80 @@ console.log ( `[TEST #3.5 : how do processes send messages `); try { console.log
                             // identity function
                     ]               
                 ])
-                console.log ( `NEWS-3.5, f1bNamed body, (awaited1) value:
+                console.log ( `NEWS-3.5, f1bNamed body, (awaited1b) value:
                     [[${awaited1b}]], type: [[${typeof awaited1b}]]` ) 
+                }
        
-                f1bNamed.call (this) 
-                    // tail call to self... 'recursion'?
-                    // TODO: check if this blows the stack; if it does, do we
-                    // have to rewrite this to a while loop? to a generator
-                    // function with a yield? (IDK: need more practice)
+                f1bNamed.call (this) // recursion
+                    // Tests indicate this does not blow the stack.
+
             } // f1bNamed
 
-            f1bNamed.call ( this )
+            f1bNamed.call ( this ) // Initiating call to recursive function.
         } // f1b
+
+        // f1d is a minimally modified version of f1b
+        let f1d      =   async function (){
+            let f1dNamed   =   async ( proc ) => { 
+                let awaited1d    = await proc.receive([
+                    [ ()=>true, m => m ]               
+                ])
+                console.log ( `NEWS-3.5, f1dNamed body, (awaited1d) value:
+                    [[${awaited1d}]], type: [[${typeof awaited1d}]]` ) 
+                f1dNamed ( proc ) 
+            } 
+            f1dNamed ( this ) 
+        } // f1d
+
+        //  f1c is a structurally modified version of f1d
+        //  
+
+        let f1c = async function ( ) {
+            // 'function'   in expression needed, for 'this' in body
+            // 'async'      in expression needed, for 'await' in body
+            let awaited1c    = await this.receive([
+                [ ()=>true, m => m ]               
+            ])
+            console.log ( `NEWS-3.5, f1e body, (awaited1c) value:
+                [[${awaited1c}]], type: [[${typeof awaited1c}]]` ) 
+        }
+
+        // f1e uses the same technique as f1c, demonstrated the abiliy to pass
+        // arguments to the recursed proc-fun.
+        let f1e = async function ( ) {
+            // 'function'   in expression needed, for 'this', 'arguments'
+            // 'async'      in expression needed, for 'await' in body
+            let awaited1e    = await this.receive([
+                [ ()=>true, m => m ]               
+            ])
+            console.log ( `NEWS-3.5, f1e body, (awaited1e) value:
+                [[${awaited1e}]], type: [[${typeof awaited1e}]]; arguments
+                passed to f1e are: [[${arguments[0]}]], [[${arguments[1]}]]` ) 
+        }
+
         let f2      =   async function ( recipientPid ){
             console.log ( `NEWS-3.5, f2 body, row before this.send()`)
             this.send ( recipientPid, 'ohai' )
             this.send ( recipientPid, 'ohai again' )
 
             let counter = 0
-            while ( counter < 100000 ) {
+            while ( counter < 15000 ) { // do your 15k test here
                 counter ++
-                this.send ( recipientPid, 'ohai' )
+                this.send ( recipientPid, 'ohai' + counter )
             }
         }
 
-        let pid1    =   n.spawn ( f1b )
+
+// f1a, f1b, f1c, f1d, f1e, are mutually exclusive options for testing
+
+        //let mod1    =   { recurse: recurse }
+        
+        //let pid1    =   n.spawn ( f1b )
+        //let pid1    =   n.spawn ( f1d )
+        //let pid1    =   n.spawn ( mod1, 'recurse', [f1c] )
+        //let pid1    =   n.spawn ( mod1, 'recurse', [f1e, ['bill','bob']] )
+        
+        let pid1    =   n.spawn ( Serl, 'recurse', [f1e, ['bill','bob']] )
 
         let mod2    =   { f2: f2 }
         let pid2    =   n.spawn ( mod2, 'f2', [pid1] )

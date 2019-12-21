@@ -7,8 +7,8 @@
 
 // TODO: proxy the 'console' object so that we can toggle debug levels
 
-// This is chosen over an (export default) expression for explicitness:
-//
+// 'export class/function' chosen over an (export default) expression for explicitness:
+
 export class Node {
     static nodeIndexFromNodeName (node, nodeName) {
         return Array.from( node.nodeMap.keys() )
@@ -171,7 +171,7 @@ export class Proc {
                     throw Error (`Proc.send/2 called, first argument was not an
                         instance of Pid`)
                 }
-                console.log(`    ${this}.send/2: supposed to send a message to ${dest}`)
+                //console.log(`    ${this}.send/2: supposed to send a message to ${dest}`)
                 this.node.procMap.get ( dest ).mailHandler ( msg )
                  
                 break
@@ -302,5 +302,28 @@ export class Pid {
         return `[object Pid<${this.nodeIndex}.${this.procIndex}>]`
     }
 } 
+
+export function recurse ( fun, funArgs ){
+    // 'function' in expression needed, for 'this' in body
+
+    let utilRecursive =   async ( _fun, _funArgs ) => { 
+        // 'async' in expression needed, for 'await' in body
+
+        let utilRecursiveAwaited    =   await _fun.apply ( this, _funArgs ) 
+            // value of 'this' is inherited from surrounding scope;
+            //
+            // So, if 'recurse' is spawn/n-ed on a new Proc, then the context is
+            // proc.recurse, and so 'this' would point to 'proc'. (see the
+            // source for Node.spawn/n
+
+        // TODO: utilRecursiveAwaited's return value is not used, but 
+        // it could be used to replace the default _funArgs
+
+        utilRecursive ( _fun, _funArgs ) 
+    } 
+    utilRecursive ( fun, funArgs ) 
+} 
+// TODO: make 'recurse' work with all arities of spawn/n
+
 
 // TODO: export class Reference ()
