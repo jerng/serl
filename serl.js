@@ -1,10 +1,11 @@
-/** @module serl
- *
+/** @module
+ *  @name Serl
  *  @summary Currently the only source file.
  *
  *  @description 
- *
  *  'export class/function' chosen over an (export default) expression for explicitness:
+ *
+ *  @todo Check each METHOD... should it be .STATIC or #INSTANCE? 
  *
  *  @todo Proxy the 'console' object so that we can toggle debug levels
  *
@@ -17,18 +18,12 @@
 'use strict'
 
 /**
- *
- */ 
-
-
-/**
- *  @class Constructor for objects analogous to an OTP node.
+ *  @class module:Serl.Node
+ *  @classdesc
+ *  Constructor for objects analogous to an OTP node.
  */
 export class Node {
-    static nodeIndexFromNodeName (node, nodeName) {
-        return Array.from( node.nodeMap.keys() )
-                    .find( (key) => node.nodeMap.get(key).name == nodeName )
-    }
+
     constructor (given) {
         this.host   =   'placeholderHost'
         this.name   =   `${given}@${this.host}`   
@@ -60,9 +55,24 @@ export class Node {
 
     }
 
+    /**
+     *  @method module:Serl.Node.nodeIndexFromNodeName
+     *  @description 
+     *  Utility function
+     *  
+     */
+    static nodeIndexFromNodeName (node, nodeName) {
+        return Array.from( node.nodeMap.keys() )
+                    .find( (key) => node.nodeMap.get(key).name == nodeName )
+    }
 
-    // TODO: implement the 'undefined function' error
-    // TODO: refer to 'dynamic module loading' and module objects later 
+
+    /**
+     *  @method module:Serl.Node#spawn
+     *  @description todo 
+     *  @todo implement the 'undefined function' error
+     *  @todo refer to 'dynamic module loading' and module objects later 
+     */
     spawn () {
         let nodeName, procIndex, newProc, module, fun, funArgs
         switch (arguments.length) {
@@ -144,7 +154,13 @@ export class Node {
 
 } // class Node
 
+/**
+ *  @class module:Serl.Proc
+ *  @classdesc
+ *  Constructor for objects analogous to an OTP process.
+ */
 export class Proc {
+
     constructor (nodeName, procIndex, localNode) {
 
         // Dependence on localNode is questionable; TODO: review
@@ -159,9 +175,23 @@ export class Proc {
         this.mailbox        = []
         this.mailHandler    = this.defaultMailHandler
     }
+
+    /**
+     *  @method module:Serl.Proc#toString
+     *  @description 
+     *  todo 
+     *  
+     */
     toString () {
         return `[object Proc<${this.pid.nodeIndex}.${this.pid.procIndex}>]`
     }
+
+    /**
+     *  @method module:Serl.Proc#defaultMailHandler 
+     *  @description 
+     *  todo 
+     *  
+     */
     defaultMailHandler ( msg ) {
         //console.log( `    defaultMailHandler received a message` )
         this.mailbox.push ( msg )
@@ -171,6 +201,13 @@ export class Proc {
             // to match them to any further logical
             // branches.
     }
+
+    /**
+     *  @method module:Serl.Proc#send 
+     *  @description 
+     *  todo 
+     *  
+     */
     send ( dest, msg ) {
         // TODO: we need to validate all first parameter arguments
 
@@ -196,6 +233,13 @@ export class Proc {
         }
 
     }
+
+    /**
+     *  @method module:Serl.Proc#receive 
+     *  @description 
+     *  todo 
+     *  
+     */
     receive ( branches ) {
 
         // TODO: rename 'mailHandler' to mailman?
@@ -307,17 +351,35 @@ export class Proc {
     // TODO: 'registered processes'
     
 
+/**
+ *  @class module:Serl.Pid
+ *  @classdesc
+ *  Constructor for objects analogous to an OTP Pid term.
+ */
 export class Pid {
+
     constructor (nodeIndex, procIndex) {
         // TODO: do we need to validate argument types here?
         this.nodeIndex  = nodeIndex
         this.procIndex  = procIndex
     }
+
+    /**
+     *  @method module:Serl.Pid#toString
+     *  @description 
+     *  todo 
+     *  
+     */
     toString () {
         return `[object Pid<${this.nodeIndex}.${this.procIndex}>]`
     }
 } 
 
+/**
+ *  @function module:Serl.recurse
+ *  @description Utility function that helps reduce boilerplate in spawn/n for
+ *  recursing functions. 
+ */
 export function recurse ( fun, funArgs ){
     // 'function' in expression needed, for 'this' in body
 

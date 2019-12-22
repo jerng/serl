@@ -1,7 +1,7 @@
-# Project: serl
+# Project: Serl
 An attempt to port Erlang/OTP semantics to browser-based ECMAScript.
 
-# Todo: priorities
+# Todo: Priorities
 
 ## First items to implement:
 
@@ -50,6 +50,6 @@ Current configuration of `conf.json`:
 
 Get on [JSDoc Slack](https://jsdoc-slack.appspot.com/).
 
-# motivations?
+# Motivations?
 
 I didn't want to do this. I wanted something like [this](https://github.com/jerng/justjsf#versions-current-branch), but hit a dead-end, and fell back to the approach on this repository.
