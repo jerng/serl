@@ -1,7 +1,7 @@
-# project: serl
+# Project: serl
 An attempt to port Erlang/OTP semantics to browser-based ECMAScript.
 
-# todo: priorities
+# Todo: priorities
 
 ## First items to implement:
 
@@ -17,20 +17,38 @@ An attempt to port Erlang/OTP semantics to browser-based ECMAScript.
 
 ## Documentation
 
+JSDoc output is [hosted here](https://jerng.github.io/serl/).
+
+## Documentation: Generation
+
 Currently using [JSDoc](https://www.npmjs.com/package/jsdoc). 
 * [JSDoc Documentation](https://jsdoc.app)
+* JSDoc can suck in this Markdown file.
+  * a [Markdown reference](https://en.support.wordpress.com/markdown-quick-reference/)
 
 Quick start to generating documentation from JSDoc-formatted comments in source files:
 
 ```
 $ cd path/to/serl-git-repository
 $ npm install --save-dev jsdoc
-$ node node_modules/jsdoc/jsdoc.js . -d docs
+$ node node_modules/jsdoc/jsdoc.js . -c node_modules/jsdoc/conf.json -d docs  -R ./README.md
+```
+Current configuration of `conf.json`:
+```
+{
+    "plugins": ["plugins/markdown"],
+    "markdown": {
+        "tags": [
+            "description"
+        ]
+    },
+    "allowUnknownTags": true
+}
 ```
 
-### Documentation: To-Do
+### Documentation: Todo
 
-Get on [JSDoc Slack](https://jsdoc-slack.appspot.com/) and figure out how to include the README.md.
+Get on [JSDoc Slack](https://jsdoc-slack.appspot.com/).
 
 # motivations?
 
