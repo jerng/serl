@@ -8,9 +8,9 @@ directory](https://github.com/jerng/serl), then click on the link to tests. Open
 the console to see test output. Tweak the code in `tests.js` and see how it
 reacts.
 
-# TODO: Priorities
+# Backlog
 
-## First items to implement:
+## Backlong: First items to implement:
 
     - DONE: 'Serl' class, which constructs an object based on (erl),
       representing one runtime system 'node'
@@ -32,7 +32,7 @@ reacts.
     - UNDONE: then do a test using the pingpong example in Erlang docs on
       message passing
 
-## Documentation
+# Documentation
 
 JSDoc output is [hosted here](https://jerng.github.io/serl/).
 
@@ -48,7 +48,7 @@ Quick start to generating documentation from JSDoc-formatted comments in source 
 ```
 $ cd path/to/serl-git-repository
 $ npm install --save-dev jsdoc
-$ node node_modules/jsdoc/jsdoc.js . -c node_modules/jsdoc/conf.json -d docs  -R ./README.md
+$ node node_modules/jsdoc/jsdoc.js lib/serl.js -d docs -c node_modules/jsdoc/conf.json -R ./README.md
 ```
 Current configuration of `conf.json`:
 ```
@@ -63,7 +63,7 @@ Current configuration of `conf.json`:
 }
 ```
 
-### Documentation: TODO
+## Documentation: TODO
 
 Get on [JSDoc Slack](https://jsdoc-slack.appspot.com/).
 
