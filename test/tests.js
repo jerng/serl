@@ -1,4 +1,4 @@
-import * as Serl from './serl.js'
+import * as Serl from '../lib/serl.js'
 
 console.log ( `[TEST #1 : does the Node class / function / object exist?` )
 try { console.log ( `OK: CODE [[new Serl.Node instanceof Serl.Node]] RETURNED
