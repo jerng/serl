@@ -1,5 +1,6 @@
 # Project: Serl
-An attempt to port Erlang/OTP semantics to browser-based ECMAScript.
+
+Javascript/OTP, anyone? Here's an attempt to port Erlang/OTP (Open Telecom Protocol) semantics to browser-based ECMAScript.
 
 ## Project: Demo
 
@@ -34,7 +35,7 @@ reacts.
 
 # Documentation
 
-JSDoc output is [hosted here](https://jerng.github.io/serl/).
+-  [Hosted here](https://jerng.github.io/serl/).
 
 ## Documentation: Generation
 
