@@ -13,20 +13,20 @@ reacts.
 
 ## Backlong: First items to implement:
 
-    - DONE: 'Serl' class, which constructs an object based on (erl),
+    - DONE: `Node` class, which constructs an object based on (erl),
       representing one runtime system 'node'
     
-    - DONE: 'Pid' class, which constructs an object based on the Erlang 'pid'
+    - DONE: `Pid` class, which constructs an object based on the Erlang 'pid'
       datatype; remember to specify its toString; maybe specify parsePid as its
       inverse
 
-    - DONE: Serl.spawn/3 method, which returns the pid of a new 'lightweight
+    - DONE: `node.spawn/3` method, which returns the pid of a new 'lightweight
       process' started on a 'serl' node; the await ES keyword should be used in
       place of the receive Erlang keyword; use the 'arguments' object to
       implement arity=3, such that the other arities can be structurally
       implemente later
 
-    - DONE: Serl.send/2 method, for sending messages; since send/3 doesn't
+    - DONE: `proc.send/2` method, for sending messages; since send/3 doesn't
       change the position of the first two parameters, we don't have to check
       for arity here...
 
@@ -63,7 +63,16 @@ Current configuration of `conf.json`:
     "allowUnknownTags": true
 }
 ```
+`.vimrc` line to auto-regenerate documentation (example):
+```
 
+autocmd BufWritePost ~/exercises/serl/* !node 
+    \ ~/exercises/serl/node_modules/jsdoc/jsdoc.js
+    \ ~/exercises/serl/lib/serl.js
+    \ -d ~/exercises/serl/docs
+    \ -c ~/exercises/serl/node_modules/jsdoc/conf.json
+    \ -R ~/exercises/serl/README.md
+```
 ## Documentation: TODO
 
 Get on [JSDoc Slack](https://jsdoc-slack.appspot.com/).
