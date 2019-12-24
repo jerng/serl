@@ -35,7 +35,8 @@ reacts.
 
 # Documentation
 
--  [Hosted here](https://jerng.github.io/serl/).
+- Just getting started... please give me a week to improve this (2019-12-24)
+- [Hosted here](https://jerng.github.io/serl/).
 
 ## Documentation: Generation
 
@@ -76,6 +77,53 @@ autocmd BufWritePost ~/exercises/serl/* !node
 ## Documentation: TODO
 
 Get on [JSDoc Slack](https://jsdoc-slack.appspot.com/).
+
+# Architecture
+
+## Architecture: Priorities
+
+- Leverage on the maturity of OTP design patterns.
+
+    - If `#itjustworks` in the browser, then we're on our way to using the same
+      framework on the server and client.
+
+    - Future possibilities: inter-op with OTP compliant code written in any
+      language and working on any runtime. 
+
+- General Erlang/OTP priorities.
+
+    - No shared memory between procs.
+
+    - Let it crash.
+
+    - Asynchronous coding style should allow non/minimally-blocking programs.
+
+        - Testing protocol to ensure this for all user code should be
+          established.
+
+    - Users must be reminded to write JavaScript like this.
+
+    - Recursion should not block the stack. `#tailcalls`
+
+        - Utilities need to be provided to ease writing this sort of code. (See
+          `Serl.recurse/2` for example.)
+
+- Otherwise minimally opinionated.
+
+- Back to basics. The framework should encourage weak users,and also as well as
+  to allow quick-starts on tiny projects.
+
+    - The library should run out of the box. Building should optional.
+
+    - The library should not require DSLs. Transpilation should be
+      optional. Everything should work in `use strict`.
+
+    - Server-side rendering should be optional. When SSR is enabled, de/hydration
+      should be optional.
+
+    - Performance optimisations should generally be optional.
+
+    - Computed properties should be optional.
 
 # Motivations?
 
