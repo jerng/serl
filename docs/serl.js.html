@@ -56,15 +56,15 @@
  *  https://erlang.org/doc/reference_manual/distributed.html#nodes}, 
  *  names should be 'given@host'.
  *
- *  @property host Should mirror OTP convention, presumably refer
+ *  @property {module:Serl.Node#host} host Should mirror OTP convention, presumably refer
  *  to a hostfile.
  *
- *  @property name Analogous to an OTP [node name]{@link
+ *  @property {module:Serl.Node#name} name Analogous to an OTP [node name]{@link
  *  https://erlang.org/doc/reference_manual/distributed.html#nodes}
  *
- *  @property procMap A map of this node's processes.
+ *  @property {Map} procMap A map of this node's processes.
  *
- *  @property nodeMap A map of connected nodes.
+ *  @property {Map} nodeMap A map of connected nodes.
  *
  *  @todo Distributed Erlang functionality (we don't need this yet) 
  *  https://erlang.org/doc/reference_manual/distributed.html
@@ -78,6 +78,7 @@ export class Node {
 
         /** 
         *   @name module:Serl.Node#host 
+        *   @type {string}
         *   @todo Assign from a hostfile.
         *   
         */
@@ -85,7 +86,10 @@ export class Node {
 
         /** 
         *   @name module:Serl.Node#name 
+        *   @type {string}
         *   @todo In OTP convention, this depends on -name vs -sname flags
+        *   @description Has the form &lt;code>given@host&lt;/code>, which is based on
+        *   the given-name of each call to &lt;code>Node(given)&lt;/code>.
         *   
         */
         this.name   =   `${given}@${this.host}`   
@@ -136,9 +140,12 @@ export class Node {
     /**
      *  @method module:Serl.Node.nodeIndexFromNodeName
      *  @description 
-     *  Utility function
+     *  Utility function, returning a &lt;code>nodeIndex&lt;/code>, integers used as
+     *  keys in {@link module:Serl.Node#nodeMap}.
      *  
-     *  @see module:Serl.Node#name 
+     *  @param {module:Serl.Node} node An instance of the Node class.
+     *  @param {module:Serl.Node#name} nodeName
+     *  @returns {integer}
      */
     static nodeIndexFromNodeName (node, nodeName) {
         return Array.from( node.nodeMap.keys() )
@@ -148,10 +155,47 @@ export class Node {
 
     /**
      *  @method module:Serl.Node#spawn
-     *  @description todo 
+     *  @description Implements various arities of spawn/n.
+     *  Spawns an instance of [Proc]{@link module:Serl.Proc} on some a certain
+     *  instance of [Node]{@link module:Serl.Node}. The keyword
+     *  &lt;code>this&lt;/code> in any &lt;code>fun&lt;/code> passed to spawn/n will refer
+     *  to the spawned &lt;code>proc&lt;/code>.
+     *
+     *  &lt;h5>spawn/1&lt;/h5>
+     *  Spawns a Proc object on the parent node, which applies
+     *  &lt;code>fun&lt;/code> to an empty array &lt;code>[]&lt;/code>. See
+     *  &lt;a target="_blank" href="http://erlang.org/doc/man/erlang.html#spawn-1">OTP docs&lt;/a>.
+     *  &lt;h6>Parameters:&lt;/h6>
+     *
+     *  | Name  | Type | Description |
+     *  |-------|------|-------------|
+     *  | fun | function |The function which will run in this process. 
+     *
+     *  &lt;h5>spawn/2&lt;/h5>
+     *  (coming soon)
+     *
+     *  &lt;h5>spawn/3&lt;/h5>
+     *  Spawns a Proc object on the parent node, which applies a function (given and
+     *  accessed via a module) to a list of arguments, in the manner of:
+     *  &lt;code>module[funName]( ... funArgs )&lt;/code> See 
+     *  &lt;a target="_blank" href="http://erlang.org/doc/man/erlang.html#spawn-3">OTP docs&lt;/a>.
+     *  &lt;h6>Parameters:&lt;/h6>
+     *
+     *  | Name  | Type | Description |
+     *  |-------|------|-------------|
+     *  | module | object | An object representing a code Module, with callable methods.
+     *  | funName | string | The string name of a method of &lt;code>module&lt;/code>. 
+     *  | funArgs | array | An array of arguments to pass to &lt;code>module[funName]&lt;/code> when the latter is called.
+     *
+     *  &lt;h5>spawn/4&lt;/h5>
+     *  (coming soon)
+     *
      *  @todo implement the 'undefined function' error
      *  @todo refer to 'dynamic module loading' and module objects later 
+     *  @todo When &lt;code>fun&lt;/code> returns, Proc should exit formally.
+     *
      */
+
     spawn () {
         let nodeName, procIndex, newProc, module, fun, funArgs
         switch (arguments.length) {
@@ -161,12 +205,9 @@ export class Node {
 
             case 1:
 
-                //  http://erlang.org/doc/man/erlang.html#spawn-1
-
                 if ( typeof arguments[0] != 'function' ) { 
                     throw Error( 'Node.spawn/1 called with a non-function' ) 
                 }
-                    //  Expect a function.
 
                 nodeName    = this.name
                 procIndex   = ++this.procMap.counter
@@ -174,10 +215,9 @@ export class Node {
 
                 newProc     = new Proc ( nodeName, procIndex, this )
                 newProc.fun = fun
-                    // So now, 'this' in fun's body will refer to newProc
 
                 this.procMap.set ( newProc.pid, newProc )
-                newProc.fun()
+                newProc.fun([])
                 break
 
             case 2:
@@ -190,19 +230,16 @@ export class Node {
                     throw Error( `Node.spawn/3, arguments[0] called with a
                         non-object (expecting the module-object)` ) 
                 }
-                    //  TODO: how do we further test for MODULE  objects?
 
                 if ( typeof arguments[1] != 'string' ) { 
                     throw Error( `Node.spawn/3, arguments[1] called with a
                         non-string (expecting the method name as a string` ) 
                 }
-                    //  Expect a function.
 
                 if ( ! Array.isArray( arguments[2] ) ) { 
                     throw Error( `Node.spawn/3, arguments[2] called with a
                         non-array (expecting arguments for fun as an array)` ) 
                 }
-                    //  Expect an Array.
 
                 nodeName        = this.name
                 procIndex       = ++this.procMap.counter
@@ -212,7 +249,6 @@ export class Node {
 
                 newProc     = new Proc ( nodeName, procIndex, this )
                 newProc.fun = fun
-                    // So now, 'this' in fun's body will refer to newProc
 
                 this.procMap.set ( newProc.pid, newProc )
                 newProc.fun ( ... funArgs )
@@ -235,20 +271,47 @@ export class Node {
 
 /**
  *  @class module:Serl.Proc
+ *
  *  @classdesc
- *  Constructor for objects analogous to an OTP process.
+ *  Constructor for objects analogous to an [OTP process]{@link
+ *  https://erlang.org/doc/getting_started/conc_prog.html#processes}.
+ *
+ *  @param {module:Serl.Node#name} nodeName
+ *
+ *  @param {integer} procIndex The internal object
+ *  {module:Serl.Node#procMap.counter} is tracked by {module:Serl.Node#spawn},
+ *  and its integer value is the construction of each {module.Serl.Pid}.
+ *
+ *  @param {module:Serl.Node} localNode The instance of {module:Serl.Node} which
+ *  spawns the new proc, then stores it in its {module:Serl.Node#procMap}. That
+ *  procMap should be the ONLY direct reference to the process, otherwise
+ *  interactions with this process should only occur via send/receive i.e.
+ *  message-passing.
+ *
+ *  Utility function, returning a &lt;code>nodeIndex&lt;/code>, integers used as
+ *  keys in {@link module:Serl.Node#nodeMap}.
+ *
+ *  @todo Dependence on localNode is questionable; review.
+ *
+ *  @todo Do we need to validate argument types here?
+ *
+ *  @todo Would performance improve if these were static methods? 
+ *
+ *
+ *
+ *
+ *
+ *
  */
 export class Proc {
 
     constructor (nodeName, procIndex, localNode) {
-
-        // Dependence on localNode is questionable; TODO: review
-
-        // TODO: do we need to validate argument types here?
-
-        // TODO: would performance improve if these were static methods? 
-
-        this.node           = localNode // TODO: review, do we want this here?
+        /**
+        *   @name module:Serl.Proc#node
+        *   @type {module:Serl.Node}
+        *   @todo Review, do we want this here?
+        */
+        this.node           = localNode 
         this.nodeIndex      = Node.nodeIndexFromNodeName ( localNode, nodeName)
         this.pid            = new Pid (this.nodeIndex, procIndex)
         this.mailbox        = []
@@ -499,7 +562,7 @@ export function recurse ( fun, funArgs ){
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Tue Dec 24 2019 14:57:35 GMT+0800 (Malaysia Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Fri Dec 27 2019 06:51:40 GMT+0800 (Malaysia Time)
 </footer>
 
 <script> prettyPrint(); </script>
