@@ -154,9 +154,7 @@ and its integer value is the construction of each {module.Serl.Pid}.</p></td>
 spawns the new proc, then stores it in its {module:Serl.Node#procMap}. That
 procMap should be the ONLY direct reference to the process, otherwise
 interactions with this process should only occur via send/receive i.e.
-message-passing.</p>
-<p>Utility function, returning a <code>nodeIndex</code>, integers used as
-keys in <a href="module-Serl.Node.html#nodeMap">module:Serl.Node#nodeMap</a>.</p></td>
+message-passing.</p></td>
         </tr>
 
     
@@ -164,6 +162,153 @@ keys in <a href="module-Serl.Node.html#nodeMap">module:Serl.Node#nodeMap</a>.</p
 </table>
 
 
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>node</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-Serl.Node.html">module:Serl.Node</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Reference to argument passed in
+parameter#3; doing this is questionable. To be reviewed.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>nodeIndex</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">integer</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Utility function, returning a
+<code>nodeIndex</code>, integers used as keys in module:Serl.Node#nodeMap.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>pid</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-Serl.Pid.html">module:Serl.Pid</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Unique identifier for this proc, on this
+Node.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>mailbox</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>A stack for messages received by this proc.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>mailHandler</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>A method which</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
 
 
 
@@ -197,7 +342,7 @@ keys in <a href="module-Serl.Node.html#nodeMap">module:Serl.Node#nodeMap</a>.</p
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line244">line 244</a>
+        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line335">line 335</a>
     </li></ul></dd>
     
 
@@ -308,7 +453,7 @@ keys in <a href="module-Serl.Node.html#nodeMap">module:Serl.Node#nodeMap</a>.</p
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line281">line 281</a>
+        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line378">line 378</a>
     </li></ul></dd>
     
 
@@ -395,7 +540,7 @@ keys in <a href="module-Serl.Node.html#nodeMap">module:Serl.Node#nodeMap</a>.</p
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line303">line 303</a>
+        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line400">line 400</a>
     </li></ul></dd>
     
 
@@ -483,7 +628,7 @@ keys in <a href="module-Serl.Node.html#nodeMap">module:Serl.Node#nodeMap</a>.</p
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line351">line 351</a>
+        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line448">line 448</a>
     </li></ul></dd>
     
 
@@ -571,7 +716,7 @@ keys in <a href="module-Serl.Node.html#nodeMap">module:Serl.Node#nodeMap</a>.</p
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line319">line 319</a>
+        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line416">line 416</a>
     </li></ul></dd>
     
 
@@ -659,7 +804,7 @@ keys in <a href="module-Serl.Node.html#nodeMap">module:Serl.Node#nodeMap</a>.</p
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line293">line 293</a>
+        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line390">line 390</a>
     </li></ul></dd>
     
 
@@ -705,13 +850,13 @@ keys in <a href="module-Serl.Node.html#nodeMap">module:Serl.Node#nodeMap</a>.</p
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Serl.html">Serl</a></li></ul><h3>Classes</h3><ul><li><a href="module-Serl.Node.html">Node</a></li><li><a href="module-Serl.Pid.html">Pid</a></li><li><a href="module-Serl.Proc.html">Proc</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Serl.html">Serl</a></li></ul><h3>Namespaces</h3><ul><li><a href="module-Serl._Node_nodeMap_.html">'Node#nodeMap'</a></li><li><a href="module-Serl._Node_procMap_.html">'Node#procMap'</a></li></ul><h3>Classes</h3><ul><li><a href="module-Serl.Node.html">Node</a></li><li><a href="module-Serl.Pid.html">Pid</a></li><li><a href="module-Serl.Proc.html">Proc</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Fri Dec 27 2019 06:51:40 GMT+0800 (Malaysia Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Dec 29 2019 14:36:43 GMT+0800 (Malaysia Time)
 </footer>
 
 <script> prettyPrint(); </script>

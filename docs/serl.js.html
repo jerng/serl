@@ -33,6 +33,8 @@
  *  @description 
  *  'export class/function' chosen over an (export default) expression for explicitness:
  *
+ *  @todo Make an Atom() class datatype?
+ *
  *  @todo Check each METHOD... should it be .STATIC or #INSTANCE? 
  *
  *  @todo Proxy the 'console' object so that we can toggle debug levels
@@ -45,6 +47,29 @@
 
 'use strict'
 
+/** 
+ *  @typedef {integer} module:Serl.NodeIndex The primary location of values of
+ *  his type is at [Node.nodeMap.counter]{@link
+ *  module:Serl.'Node#nodeMap'.counter}. These are then used as keys of 
+ *  [Node.nodeMap]{@link module:Serl.'Node#nodeMap'}. They are also used as the
+ *  first integer value in the string representation of a [Pid]{@link
+ *  module:Serl.Pid}.
+ *
+ *  This custom type exists only in documentation, and must be manually enforced
+ *  in code, by developers.
+ */
+
+/** @typedef {integer} module:Serl.ProcIndex The primary location of values of
+ *  this type is at [Node.procMap.counter]{@link
+ *  module:Serl.'Node#procMap'.counter}. These are then used as the second
+ *  integer value in the string representation of a [Pid]{@link
+ *  module:Serl.Pid}. ** UNLIKE [NodeIndex]{@link module:Serl.NodeIndex}, these
+ *  are NOT keys of [Node.procMap]{@link module:Serl.'Node#procMap'}. **
+ *
+ *  This custom type exists only in documentation, and must be manually enforced
+ *  in code, by developers.
+ */
+
 /**
  *  @class module:Serl.Node
  *
@@ -52,9 +77,15 @@
  *  Constructor for objects analogous to an [OTP node]{@link
  *  https://erlang.org/doc/reference_manual/distributed.html#nodes}.
  *
- *  @param {string} given Following OTP convention, a [node name]{@link
+ *  @param {String} given Following OTP convention, a [node name]{@link
  *  https://erlang.org/doc/reference_manual/distributed.html#nodes}, 
  *  names should be 'given@host'.
+ *
+ *  @property {Function} nodeIndexFromNodeName {@link
+ *  module:Serl.Node.nodeIndexFromNodeName}
+ *
+ *  @property {Function} spawn {@link
+ *  module:Serl.Node#spawn}
  *
  *  @property {module:Serl.Node#host} host Should mirror OTP convention, presumably refer
  *  to a hostfile.
@@ -62,7 +93,7 @@
  *  @property {module:Serl.Node#name} name Analogous to an OTP [node name]{@link
  *  https://erlang.org/doc/reference_manual/distributed.html#nodes}
  *
- *  @property {Map} procMap A map of this node's processes.
+ *  @property {Map} procMap 
  *
  *  @property {Map} nodeMap A map of connected nodes.
  *
@@ -78,63 +109,122 @@ export class Node {
 
         /** 
         *   @name module:Serl.Node#host 
-        *   @type {string}
+        *   @type {String}
         *   @todo Assign from a hostfile.
+        *   @description This custom type exists only in documentation, and must
+        *   be manually enforced in code, by developers.
         *   
         */
         this.host   =   'placeholderHost'
 
         /** 
         *   @name module:Serl.Node#name 
-        *   @type {string}
+        *   @type {String}
         *   @todo In OTP convention, this depends on -name vs -sname flags
         *   @description Has the form &lt;code>given@host&lt;/code>, which is based on
         *   the given-name of each call to &lt;code>Node(given)&lt;/code>.
+        *
+        *   This custom type exists only in documentation, and must
+        *   be manually enforced in code, by developers.
         *   
         */
         this.name   =   `${given}@${this.host}`   
 
         /** 
-        *   @name module:Serl.Node#procMap 
-        *   @package
-        *   @description Keys are Pid instances, Values are Proc instances
-        *   @prop {integer} counter This helps us avoid duplicate process-indices on the
-        *   local node, when generating a Pid object.
+        *   @namespace module:Serl.'Node#procMap'
         *
-        *   Making this un-writable would be safer, but more expensive as the
-        *   value would have to BE RE-CONFIGURED for mutation; and we expect this
-        *   to change frequently.
+        *   @description A map of a node's local processes (any instances of
+        *   [Proc]{@link module:Serl.Node.Proc} which were created by calling
+        *   [spawn/n]{@link module:Serl.Node.spawn} on that node.
+        *   Here we use a Map, because we anticipate frequent
+        *   lookups based on given [Pid]{@link module:Serl.Pid}s. We also expect
+        *   'frequent additions and removals of key-value pairs'
         *
-        *   @todo Currently this stores the actual processes as values. Whereas
-        *   Pids are keys... so what should the value be, when a Pid key points
-        *   to a remote node?
+        *   @property {module:Serl.Pid} @keys Keys in the Map should be
+        *   instances of this class.
         *
-        *   @todo Should this have its own class? Yes if you want JSDoc to be
-        *   able to document it structurally. Currently naming its prop to
-        *   module:Serl.Node#procMap#counter doesn't register...
+        *   @property {module:Serl.Proc} @values Values in the Map should be
+        *   instances of this class.
+        *
+        *   @property {module:Serl.ProcIndex} counter {@link
+        *   module:Serl.'Node#procMap'.counter}
+        *
+        *   @todo update docs to remind developers to enforce
+        *   nodeIndex = parseInt(nodeIndex).
+        *
+        *   @todo Should ProcMap have its own class? 
         */
         this.procMap    =   new Map( [ ] )  
-        Object.defineProperty ( this.procMap, 'counter', {  value : 0,
-                                                            writable: true } )
+        
+        /**
+        *   @name module:Serl.'Node#procMap'.counter
+        *
+        *   @description This helps us avoid duplicate process-indices on the
+        *   local node, when generating a Pid object. We want to use Map here,
+        *   because we expect 'frequent additions and removals of key-value
+        *   pairs'
+        * 
+        *   Each node must track all its previously spawned processes, and so we
+        *   want an incrementing [Node.procMap.counter]{@link
+        *   module:Serl.'Node#procMap'.counter}, to ensure that for the lifetime
+        *   of a node, N, all of N's local processes have a unique ProcIndex. 
+        * 
+        *   In the current implementation, the upper limit seems to simply be
+        *   the size of Node.procMap.counter. (In Erlang, the equivalent number
+        *   is stored in 18 to 28 bits, after which numbers are reused...
+        *   however in JavaScript, it seems we have almost 53 bits...)
+        * 
+        */
+        this.procMap.counter = 0
 
         /** 
-        *   @name module:Serl.Node#nodeMap 
-        *   @package
-        *   @description Keys are integers, Values are { name: 'a string' }
+        *   @namespace module:Serl.'Node#nodeMap'
         *
-        *   Discuss: not using an Array, because we follow Erlang convention of
-        *            limiting the number of connected nodes in a lifetime; so
-        *            keys are the nodeIndex
+        *   @description A map of a node's known (currently connected, and
+        *   previously connected)) nodes, including itself. 
+        *   Here we use a Map, because we anticipate frequent
+        *   lookups based on given [NodeIndex]{@link module:Serl.NodeIndex}s. We
+        *   also expect 'frequent additions and removals of key-value pairs'
         *   
-        *   Here we impose a convention where the local node is index=0
+        *   @property {module:Serl.NodeIndex} @keys Keys in the Map should be
+        *   of this type.
         *
-        *   @todo Currently this stores names which can be used to locate
-        *   distributed nodes. 
+        *   @property { described } @values Values in the Map should be
+        *   of the form &lt;code>{ name: [NodeName]{@link module:Serl.Node#name}
+        *   }&lt;/code>. 
+
         *
-        *   @todo Should this have its own class? Yes if you want JSDoc to be
-        *   able to document it structurally. 
+        *   @property {Serl.NodeIndex} counter {@link
+        *   module:Serl.'Node#nodeMap'.counter}
+        *
+        *   @todo Add nodeMap.counter to make this consistent with
+        *   procMap.counter; update docs to remind developers to enforce
+        *   nodeIndex = parseInt(nodeIndex).
+        *
+        *   @todo Values should have their own class.
+        *
+        *   @todo Should NodeMap have its own class? 
         */
         this.nodeMap    =   new Map(    [   [0, { name:this.name }] ] )
+
+        /**
+        *   @name module:Serl.'Node#nodeMap'.counter
+        *
+        *   @description This helps us avoid duplicate {@link Serl.NodeIndex}s on the
+        *   local node, when generating a [Pid]{@link module:Serl.Pid}. 
+        *
+        *   Each node must track all previously known nodes, and so we want an
+        *   incrementing counter, to ensure that for any single
+        *   lifetime of a node, N, every other node that ever connects to N, has a
+        *   unique NodeIndex from N's point of view. 
+        * 
+        *   In the current implementation, the upper limit of trackable nodes connected
+        *   to N in one lifetime seems to simply be the size of Node.nodeMap.counter.
+        *   Here we impose a convention where the local node is index=0
+        *
+        */
+        this.nodeMap.counter = 0
+
     }
 
     /**
@@ -169,7 +259,7 @@ export class Node {
      *
      *  | Name  | Type | Description |
      *  |-------|------|-------------|
-     *  | fun | function |The function which will run in this process. 
+     *  | fun | Function |The function which will run in this process. 
      *
      *  &lt;h5>spawn/2&lt;/h5>
      *  (coming soon)
@@ -183,9 +273,9 @@ export class Node {
      *
      *  | Name  | Type | Description |
      *  |-------|------|-------------|
-     *  | module | object | An object representing a code Module, with callable methods.
-     *  | funName | string | The string name of a method of &lt;code>module&lt;/code>. 
-     *  | funArgs | array | An array of arguments to pass to &lt;code>module[funName]&lt;/code> when the latter is called.
+     *  | module | Object | An object representing a code Module, with callable methods.
+     *  | funName | String | The string name of a method of &lt;code>module&lt;/code>. 
+     *  | funArgs | Array | An array of arguments to pass to &lt;code>module[funName]&lt;/code> when the latter is called.
      *
      *  &lt;h5>spawn/4&lt;/h5>
      *  (coming soon)
@@ -193,7 +283,8 @@ export class Node {
      *  @todo implement the 'undefined function' error
      *  @todo refer to 'dynamic module loading' and module objects later 
      *  @todo When &lt;code>fun&lt;/code> returns, Proc should exit formally.
-     *
+     *  @todo Enforce passing objects by value (copy on call).
+     *  
      */
 
     spawn () {
@@ -288,19 +379,25 @@ export class Node {
  *  interactions with this process should only occur via send/receive i.e.
  *  message-passing.
  *
- *  Utility function, returning a &lt;code>nodeIndex&lt;/code>, integers used as
- *  keys in {@link module:Serl.Node#nodeMap}.
+ *  @property {module:Serl.Node} node Reference to argument passed in
+ *  parameter#3; doing this is questionable. To be reviewed. 
+ *
+ *  @property {integer} nodeIndex Utility function, returning a
+ *  &lt;code>nodeIndex&lt;/code>, integers used as keys in {@link
+ *  module:Serl.Node#nodeMap}.
+ *
+ *  @property {module:Serl.Pid} pid Unique identifier for this proc, on this
+ *  Node.
+ *
+ *  @property {Array} mailbox A stack for messages received by this proc.
+ *
+ *  @property {Function} mailHandler A method which  
  *
  *  @todo Dependence on localNode is questionable; review.
  *
  *  @todo Do we need to validate argument types here?
  *
  *  @todo Would performance improve if these were static methods? 
- *
- *
- *
- *
- *
  *
  */
 export class Proc {
@@ -556,13 +653,13 @@ export function recurse ( fun, funArgs ){
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Serl.html">Serl</a></li></ul><h3>Classes</h3><ul><li><a href="module-Serl.Node.html">Node</a></li><li><a href="module-Serl.Pid.html">Pid</a></li><li><a href="module-Serl.Proc.html">Proc</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Serl.html">Serl</a></li></ul><h3>Namespaces</h3><ul><li><a href="module-Serl._Node_nodeMap_.html">'Node#nodeMap'</a></li><li><a href="module-Serl._Node_procMap_.html">'Node#procMap'</a></li></ul><h3>Classes</h3><ul><li><a href="module-Serl.Node.html">Node</a></li><li><a href="module-Serl.Pid.html">Pid</a></li><li><a href="module-Serl.Proc.html">Proc</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Fri Dec 27 2019 06:51:40 GMT+0800 (Malaysia Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Dec 29 2019 14:36:43 GMT+0800 (Malaysia Time)
 </footer>
 
 <script> prettyPrint(); </script>
