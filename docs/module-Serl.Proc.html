@@ -115,7 +115,7 @@
             <td class="type">
             
                 
-<span class="param-type">integer</span>
+<span class="param-type"><a href="module-Serl.html#.ProcIndex">module:Serl.ProcIndex</a></span>
 
 
             
@@ -125,9 +125,7 @@
 
             
 
-            <td class="description last"><p>The internal object
-{module:Serl.Node#procMap.counter} is tracked by {module:Serl.Node#spawn},
-and its integer value is the construction of each {module.Serl.Pid}.</p></td>
+            <td class="description last"></td>
         </tr>
 
     
@@ -150,9 +148,9 @@ and its integer value is the construction of each {module.Serl.Pid}.</p></td>
 
             
 
-            <td class="description last"><p>The instance of {module:Serl.Node} which
-spawns the new proc, then stores it in its {module:Serl.Node#procMap}. That
-procMap should be the ONLY direct reference to the process, otherwise
+            <td class="description last"><p>The <a href="module-Serl.Node.html">node</a> which
+spawns the new proc, then stores it in its node.procMap.</p>
+<p>This procMap should be the ONLY direct reference to the process, otherwise
 interactions with this process should only occur via send/receive i.e.
 message-passing.</p></td>
         </tr>
@@ -192,6 +190,98 @@ message-passing.</p></td>
 
         <tr>
             
+                <td class="name"><code>toString</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p><a href="module-Serl.Proc.html#toString">module:Serl.Proc#toString</a></p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>defaultMailHandler</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p><a href="module-Serl.Proc.html#defaultMailHandler">module:Serl.Proc#defaultMailHandler</a></p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>send</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p><a href="module-Serl.Proc.html#send">module:Serl.Proc#send</a></p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>receive</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p><a href="module-Serl.Proc.html#receive">module:Serl.Proc#receive</a></p></td>
+        </tr>
+
+    
+
+        <tr>
+            
                 <td class="name"><code>node</code></td>
             
 
@@ -222,7 +312,7 @@ parameter#3; doing this is questionable. To be reviewed.</p></td>
             <td class="type">
             
                 
-<span class="param-type">integer</span>
+<span class="param-type"><a href="module-Serl.html#.NodeIndex">module:Serl.NodeIndex</a></span>
 
 
             
@@ -232,8 +322,7 @@ parameter#3; doing this is questionable. To be reviewed.</p></td>
 
             
 
-            <td class="description last"><p>Utility function, returning a
-<code>nodeIndex</code>, integers used as keys in module:Serl.Node#nodeMap.</p></td>
+            <td class="description last"></td>
         </tr>
 
     
@@ -303,7 +392,10 @@ Node.</p></td>
 
             
 
-            <td class="description last"><p>A method which</p></td>
+            <td class="description last"><p>A method which determines how the process
+handles messages it receives. This may include storing them in the mailbox,
+checking messages already in the mailbox, executing other logic, or simply
+ignoring them.</p></td>
         </tr>
 
     
@@ -453,7 +545,7 @@ Node.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line389">line 389</a>
+        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line409">line 409</a>
     </li></ul></dd>
     
 
@@ -496,7 +588,9 @@ Node.</p></td>
 
 
 <div class="description">
-    <p>todo</p>
+    <p>When the next message come in, they will be held in
+this.mailbox in their order of
+arrival. No attempt is made to match them to any further logical branches</p>
 </div>
 
 
@@ -540,7 +634,7 @@ Node.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line411">line 411</a>
+        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line432">line 432</a>
     </li></ul></dd>
     
 
@@ -584,7 +678,10 @@ Node.</p></td>
 
 
 <div class="description">
-    <p>todo</p>
+    <p>See <a href="http://erlang.org/doc/reference_manual/expressions.html#receive">OTP docs</a>.</p>
+<p>In the body of a function passed to <a href="module-Serl.Node.html#spawn">spawn/n</a>, usage would be in the example below, where
+<code>this</code> refers to the <a href="module-Serl.Proc.html">proc</a> which was
+spawned.</p>
 </div>
 
 
@@ -628,14 +725,61 @@ Node.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line459">line 459</a>
+        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line487">line 487</a>
     </li></ul></dd>
     
 
     
 
     
+    <dt class="tag-see">See:</dt>
+    <dd class="tag-see">
+        <ul>
+            <li>Text:           <a href="https://erlangbyexample.org/send-receive">https://erlangbyexample.org/send-receive</a><br>
+ Illustrated:    <a href="https://learnyousomeerlang.com/more-on-multiprocessing">https://learnyousomeerlang.com/more-on-multiprocessing</a>
 
+ <pre>
+ How does a process handle received messages?
+
+ When a process receives a message, the message is
+ appended to the mailbox.
+
+ The receive block will try each message in the mailbox (one
+ by one), against that block's sequence of patterns, until
+ one of the messages matches a pattern.
+
+ When there is match, the message gets removed from
+ the mailbox and the logic corresponding to the matched pattern
+ will get executed. If there is no match,
+ then that message remains in the mailbox, and the following
+ message gets tried sequentially,
+ against all of the receive block's patterns.
+
+ If no messages in the mailbox match any pattern, the process,
+ having tried all messages, and having exhausted all receive
+ patterns, will get suspended until a new message arrives,
+ and the message processing logic starts all over,
+ beginning with the first message in the mailbox.
+ </pre></li>
+        </ul>
+    </dd>
+    
+
+    
+    <dt class="tag-todo">To Do:</dt>
+    <dd class="tag-todo">
+        <ul>
+            <li>extend example to include entire call to spawn/n</li>
+        
+            <li>typecheck 'branches'? Should be iterable. Currently expects</li>
+        
+            <li>type: [ [ 'function', 'function'] ]</li>
+        
+            <li>Perhaps allow type: [ 'function', 'function' ] ?</li>
+        
+            <li>Perhaps allow type: 'function' where this is just the branch?</li>
+        </ul>
+    </dd>
     
 </dl>
 
@@ -657,6 +801,13 @@ Node.</p></td>
 
 
 
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>let awaited = await this.receive( branches )
+
+ </code></pre>
+
+
 
         
             
@@ -664,7 +815,7 @@ Node.</p></td>
     
 
     
-    <h4 class="name" id="send"><span class="type-signature"></span>send<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="send"><span class="type-signature"></span>send<span class="signature">(dest, msg)</span><span class="type-signature"></span></h4>
     
 
     
@@ -672,7 +823,10 @@ Node.</p></td>
 
 
 <div class="description">
-    <p>todo</p>
+    <p>Sends a message from this process to another process.</p>
+<p>Ultimately executes:</p>
+<pre class="prettyprint source"><code>destinationProcess.mailHandler ( validMsg )
+</code></pre>
 </div>
 
 
@@ -681,6 +835,79 @@ Node.</p></td>
 
 
 
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>dest</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-Serl.Pid.html">module:Serl.Pid</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>A Pid object which addresses the local or
+remote process.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>msg</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The message to be sent to the destination process.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
 
 
 
@@ -716,7 +943,7 @@ Node.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line427">line 427</a>
+        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line444">line 444</a>
     </li></ul></dd>
     
 
@@ -724,6 +951,15 @@ Node.</p></td>
 
     
 
+    
+    <dt class="tag-todo">To Do:</dt>
+    <dd class="tag-todo">
+        <ul>
+            <li>Validation/Proxy/Reassignment: ensure that nothing is passed by reference.</li>
+        
+            <li>Validation of <code>dest</code>?</li>
+        </ul>
+    </dd>
     
 </dl>
 
@@ -760,7 +996,10 @@ Node.</p></td>
 
 
 <div class="description">
-    <p>todo</p>
+    <p>Overridden <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toString">toString</a>
+. Output is of the form:</p>
+<pre class="prettyprint source"><code>[object Proc&lt;0.1>]
+</code></pre>
 </div>
 
 
@@ -804,7 +1043,7 @@ Node.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line401">line 401</a>
+        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line417">line 417</a>
     </li></ul></dd>
     
 
@@ -812,6 +1051,13 @@ Node.</p></td>
 
     
 
+    
+    <dt class="tag-todo">To Do:</dt>
+    <dd class="tag-todo">
+        <ul>
+            <li>this should be made into a static method.</li>
+        </ul>
+    </dd>
     
 </dl>
 
@@ -856,7 +1102,7 @@ Node.</p></td>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Mon Dec 30 2019 05:12:38 GMT+0800 (Malaysia Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Mon Dec 30 2019 06:52:29 GMT+0800 (Malaysia Time)
 </footer>
 
 <script> prettyPrint(); </script>
