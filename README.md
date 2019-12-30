@@ -1,6 +1,8 @@
 # Project: Serl
 
-Javascript/OTP, anyone? Here's an attempt to port Erlang/OTP (Open Telecom Protocol) semantics to browser-based ECMAScript.
+Javascript/OTP, anyone? Here's an attempt to port
+[Erlang](https://erlang.org/doc/getting_started/intro.html)/[OTP](https://erlang.org/doc/design_principles/des_princ.html)
+(Open Telecom Protocol) semantics to browser-based ECMAScript.
 
 ## Project: Demo
 
@@ -9,34 +11,22 @@ directory](https://github.com/jerng/serl), then click on the link to tests. Open
 the console to see test output. Tweak the code in `tests.js` and see how it
 reacts.
 
-# Backlog
+## Project: Versions 
 
-## Backlong: First items to implement:
+[v0.0.1](https://github.com/jerng/serl/tree/v0.0.1)
+([master](https://github.com/jerng/serl/tree/master)) - A documented
+proof-of-concept, where a single node can spawn multiple procs, and where a proc
+can recursively send >15,000 messages to another without blowing the stack. An
+implementation of Erlang-style pattern matching is also demonstrated.
 
-    - DONE: `Node` class, which constructs an object based on (erl),
-      representing one runtime system 'node'
-    
-    - DONE: `Pid` class, which constructs an object based on the Erlang 'pid'
-      datatype; remember to specify its toString; maybe specify parsePid as its
-      inverse
-
-    - DONE: `node.spawn/3` method, which returns the pid of a new 'lightweight
-      process' started on a 'serl' node; the await ES keyword should be used in
-      place of the receive Erlang keyword; use the 'arguments' object to
-      implement arity=3, such that the other arities can be structurally
-      implemente later
-
-    - DONE: `proc.send/2` method, for sending messages; since send/3 doesn't
-      change the position of the first two parameters, we don't have to check
-      for arity here...
-
-    - UNDONE: then do a test using the pingpong example in Erlang docs on
-      message passing
+v0.0.2 ([develop](https://github.com/jerng/serl/tree/develop)) - Aiming to
+simply to go through all the @todos and update the ones which improve DX, such
+as turning weirdly shaped objects into classes, validating arguments, and
+renaming things.
 
 # Documentation
 
-- Just getting started... please give me a week to improve this (2019-12-24)
-- [Hosted here](https://jerng.github.io/serl/).
+- Framework documentation is [hosted here](https://jerng.github.io/serl/).
 
 ## Documentation: Generation
 
@@ -130,3 +120,28 @@ Get on [JSDoc Slack](https://jsdoc-slack.appspot.com/).
 I didn't want to do this. I wanted something like
 [this](https://github.com/jerng/justjsf#versions-current-branch), but hit a
 dead-end, and fell back to the approach on this repository.
+
+# Backlog
+
+## Backlog: First items to implement:
+
+    - DONE: `Node` class, which constructs an object based on (erl),
+      representing one runtime system 'node'
+    
+    - DONE: `Pid` class, which constructs an object based on the Erlang 'pid'
+      datatype; remember to specify its toString; maybe specify parsePid as its
+      inverse
+
+    - DONE: `node.spawn/3` method, which returns the pid of a new 'lightweight
+      process' started on a 'serl' node; the await ES keyword should be used in
+      place of the receive Erlang keyword; use the 'arguments' object to
+      implement arity=3, such that the other arities can be structurally
+      implemente later
+
+    - DONE: `proc.send/2` method, for sending messages; since send/3 doesn't
+      change the position of the first two parameters, we don't have to check
+      for arity here...
+
+    - UNDONE: then do a test using the pingpong example in Erlang docs on
+      message passing
+
