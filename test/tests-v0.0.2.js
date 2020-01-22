@@ -1,6 +1,20 @@
 import * as Serl from '../lib/serl.js'
 
-console.log ( `[TEST # 1 : demonstration of JSON.stringify() failures` ); try { console.log ( `OK: CODE [[  
+console.log ( `[TEST # 1 : demonstration of JSON.stringify() failures; check
+against
+https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify` ); try { console.log ( `OK: CODE [[  
+
+    ]] RETURNED [[${(()=>{
+
+        
+
+
+})() }]]` ) } catch (e) { console.error(e) } finally {console.log('] - - ')}
+
+console.error ( `[TEST # 1: Reconstruct this after TEST #2 rectifications are complete..]` )
+console.error ( `[TEST # 1b: Other instances of Object: Map, Set, WeakMap, and WeakSet).]` )
+
+console.log ( `[TEST # 2 : rectification of JSON.stringify() failures` ); try { console.log ( `OK: CODE [[  
 
     ]] RETURNED [[${(()=>{
 
@@ -12,7 +26,6 @@ console.log ( `[TEST # 1 : demonstration of JSON.stringify() failures` ); try { 
       number    : 123,
       bool      : false,
       nul       : null,
-      nan       : NaN,  
       array     : [4,5,6],
       object    : {
         a : 7,
@@ -20,6 +33,8 @@ console.log ( `[TEST # 1 : demonstration of JSON.stringify() failures` ); try { 
         c : 9,
       },  
 
+      nan       : NaN,  
+                    // forced to 'null' - fixed
       inf       : Infinity,  
                     // forced to 'null'
       re        : /.*/,  
@@ -52,10 +67,44 @@ console.log ( `[TEST # 1 : demonstration of JSON.stringify() failures` ); try { 
     //data.circObject.z  =   data.circObject
                     // TypeError 
 
-    let result = JSON.stringify ( data, null, '\t' )
-    console.log(result) 
+    let bigIntString    =   '244684765745644357464554765466456476556467565'
+    //data.bigInt         =   BigInt ( bigIntString )
+                    // TypeError 
 
-    return result 
+    // TODO: replacer and reviver below: are written here to demonstrate
+    // hierarchy of types, but may be refactored for performance.
+
+
+    let replacer = (key, value) => {
+            let valueType = typeof value
+            if ( valueType == 'object' )    { return value }
+            if ( Object.is (value, NaN) )   { return { _serlType: 'NaN' } } 
+            return value
+    }
+    // TODO: _serlType values could be optimised to be something other than strings
+
+    let reviver =   (key, value) => {
+            let valueType = typeof value
+            if ( valueType == 'object')    { 
+
+                if ( value === null ) { return value }
+                
+                switch ( value._serlType) {
+                    case 'NaN':
+                        return NaN
+                        break
+                    default:
+                } 
+                return value 
+            }
+            return value
+    }
+
+    let result = JSON.stringify ( data, replacer, '\t' )
+
+    console.log( JSON.parse (result, reviver) ) 
+
+    return 'see console.log() above' 
 
 })() }]]` ) } catch (e) { console.error(e) } finally {console.log('] - - ')}
 
