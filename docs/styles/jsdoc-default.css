@@ -119,7 +119,7 @@ nav ul {
     line-height: 17px;
     padding: 0;
     margin: 0;
-    list-style-type: none;
+    list-style-type: default;
 }
 
 nav ul a, nav ul a:visited, nav ul a:active {
@@ -256,7 +256,7 @@ tr > th:last-child { border-right: 1px solid #ddd; }
 .details dt { width: 120px; float: left; padding-left: 10px;  padding-top: 6px; }
 .details dd { margin-left: 70px; }
 .details ul { margin: 0; }
-.details ul { list-style-type: none; }
+.details ul { list-style-type: default; }
 .details li { margin-left: 30px; padding-top: 6px; }
 .details pre.prettyprint { margin: 0 }
 .details .object-value { padding-top: 0; }

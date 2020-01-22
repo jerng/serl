@@ -730,7 +730,7 @@ export function recurse ( fun, funArgs ){
 
 /**
  *  @function module:Serl.cloneFun
- *
+ *  
  *  @description Serl uses this interface to ensure that functions passed to
  *  [spawn/n]{@link module:Serl.Node#spawn} (which spawn/n assigns to new procs) are truly portable lambdas,
  *  where the function body has no variables in scope which were defined outside
@@ -755,31 +755,76 @@ export function recurse ( fun, funArgs ){
  *  | Inherited Nonenumerable    |&lt;span style="background-color:#cfc;">true&lt;/span>    |false   |false   |false   |false   |false | false  |false
  *  | Inherited Symbols keys |&lt;span style="background-color:#cfc;">true&lt;/span>    |false   |false   |false   |false   |false   |false | false
  *
- * ... therefore, as `in` is not an iterating tool, there is no single
- * sufficient tool for iterating through properties to perform deep cloning.
+ *  ... therefore, as `in` is not an iterating tool, there is no single
+ *  Sufficient tool for iterating through properties to perform deep cloning.
  *
- * The MDN link above cites the following stackoverflow answer on,
- * '[getting non-enumerable, ineherited, properties of an object]{@link
- * https://stackoverflow.com/questions/8024149/is-it-possible-to-get-the-non-enumerable-inherited-property-names-of-an-object/8024294#8024294}'
- * in deploying this pattern to walk up the prototype chain:
+ *  The MDN link above cites the following stackoverflow answer on,
+ *  '[getting non-enumerable, ineherited, properties of an object]{@link
+ *  https://stackoverflow.com/questions/8024149/is-it-possible-to-get-the-non-enumerable-inherited-property-names-of-an-object/8024294#8024294}'
+ *  in deploying this pattern to walk up the prototype chain:
+ *   ```
+ *   var accumulator
+ *   do  { // THINGS TO accumulator USING object
+ *       } while ( object = Object.getPrototypeOf ( object ) )
+ *   return accumulator
+ *   ```
+ *  @see Symbols on MDN 
+ *  - Perspective A: MDN, [Symbol]{@link
+ *  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol},
+ *  indicates that symbols add no outstanding benefit to performance or privacy,
+ *  and should be regarded as useful only for guaranteeing uniqueness of keys on
+ *  a per-runtime basis. Some OTP code has per-runtime variables, so we should
+ *  implement those using JavaScript symbols. But with regards to inter-runtime
+ *  communications, we don't want to try to send symbols over the wire. Also
+ *  there is probably no benefit to using Symbol to model Erlang's Atom.
+ *      - Moreover, should we seek to use JSON.stringify() and JSON.parse() with
+ *  their 'replacer function' parameters, the [MDN docs]{@link
+ *  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify}
+ *  indicate that *All Symbol-keyed properties will be completely ignored,
+ *  even when using the replacer function.*
+ *  - Perspective B: Atoms should be modelled as [Symbol.for()]{@link
+ *  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/for}
+ *  because these are respectively implemented in a very similar way, using a
+ *  look-up table under the hood. Note that Erlang's atom table is never garbage
+ *  collected; check on how JavaScript handles Symbol tables. Finally, before
+ *  deciding to use this, run performance tests on arbitrary-length string
+ *  comparisons, and Symbol comparisons where Symbol.for(keys), where keys are
+ *  arbitrary-length strings.
+ *
+ *  @see MDN, on JSON.parse() and JSON.stringify() using the `replacer function`
+ *  argument. 
+ *
+ *  Specifically... note that [.toJSON() behaviour]{@link
+ *  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#toJSON_behavior}
+ *  does NOT allow REFLECTION, and thus appears rather useless for our attempt
+ *  to serialise function objects. For example:
  *  ```
- *  var accumulator
- *  do  { // THINGS TO accumulator USING object
- *      } while ( object = Object.getPrototypeOf ( object ) )
- *  return accumulator
+    var obj = {
+        data: 'data',
+        
+        toJSON (key) {
+            if (key)
+                return `Now I am a nested object under key '${key}'`;
+            else
+                return this;
+        }
+    };
+
+    JSON.stringify(obj);
+    // '{"data":"data"}'
+
+    JSON.stringify({ obj })
+    // '{"obj":"Now I am a nested object under key 'obj'"}'
+
+    JSON.stringify([ obj ])
+    // '["Now I am a nested object under key '0'"]'
  *  ```
+ *  
+ *  ... since `toJSON()` is a dead-end, we should return to the `replacer
+ *  function` approach.
  *
- *
- *
- * @see MDN, [Symbol]{@link
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol},
- * indicates that symbols add no outstanding benefit to performance or privacy,
- * and should be regarded as useful only for guaranteeing uniqueness of keys on
- * a per-runtime basis. Some OTP code has per-runtime variables, so we should
- * implement those using JavaScript symbols. But with regards to inter-runtime
- * communications, we don't want to try to send symbols over the wire. Also
- * there is probably no benefit to using Symbol to model Erlang's Atom.
- *
+ *  @see Benchmark indicates that `String.slice()` is fastest: [Remove First and Last Characters in String]{@link
+ *  https://www.measurethat.net/Benchmarks/Show/6951/0/remove-first-and-last-characters-in-string}.
  *
  *
  *
@@ -803,7 +848,7 @@ export function cloneFun ( fun ) {
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Tue Jan 21 2020 16:34:47 GMT+0800 (Malaysia Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Wed Jan 22 2020 14:32:56 GMT+0800 (Malaysia Time)
 </footer>
 
 <script> prettyPrint(); </script>
