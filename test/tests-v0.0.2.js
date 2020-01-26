@@ -45,7 +45,7 @@ console.log ( `[TEST # 2 : rectification of JSON.stringify() failures` ); try { 
       re        : /.*/,  
                     // forced to {} - fixed
       date      : new Date(),  
-                    // stringified
+                    // stringified - fixed
       undef     : undefined,  
                     // lost
       longFunEx : function () { console.log ('serialise me') },
@@ -84,21 +84,33 @@ console.log ( `[TEST # 2 : rectification of JSON.stringify() failures` ); try { 
     let replacer = (key, value) => {
 
             let valueType = typeof value
+            switch ( valueType ) {
+                // TODO:    test if performance improves by testing valuetype[0]
+                //          instead
 
-            if ( valueType == 'object' ) { 
+                case 'object':
+                    if ( value instanceof Date )  { return { _serlType: 4,
+                                                             v: value.toISOString() }
+                    }
+                    if ( value instanceof RegExp )  return { _serlType: 3,
+                                                             v: value.toString().slice( 1, -1 ) }
+                    /* otherwise literally */       return value 
 
+                case 'function':
+                    let stringifiedFunction = value.toString()
+                        // TODO: it is possible here to test for fat arrow, or
+                        // long function expressions
+                                                    return { _serlType: 5,
+                                                             v: stringifiedFunction }
 
-                if ( value instanceof Date )  { return { _serlType: 4,
-                                                         v: value.toISOString() }
-                }
-                if ( value instanceof RegExp )  return { _serlType: 3,
-                                                         v: value.toString().slice( 1, -1 ) }
-                /* otherwise literally */       return value 
+                /* default: do nothing */
             }
+
             if ( Object.is (value, NaN) )       return { _serlType: 0 }  
             switch ( value ) {
                 case Infinity :                 return { _serlType: 1 } 
                 case -Infinity :                return { _serlType: 2 } 
+                /* default: do nothing */
             }
             return value
     }
@@ -121,11 +133,18 @@ console.log ( `[TEST # 2 : rectification of JSON.stringify() failures` ); try { 
                         case 3 :            return RegExp( value.v )
                         case 4 :            return new Date( value.v )
                                                 // Excluding `new` does not work
-                        default:            /* do nothing */
+
+                        case 5 :            return Function ( '(' + value.v + ')' )
+                                                // Declares function expressions
+                                                // in the global scope.
+
+                        /* default:         do nothing */
                     } 
                     return value 
 
                     break
+
+                /* default: do nothing */
             }
 
             return value
