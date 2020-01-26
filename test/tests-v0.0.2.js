@@ -24,6 +24,9 @@ console.log ( `[TEST # 2 : rectification of JSON.stringify() failures` ); try { 
     let data    =   {
       string    : 'string',
       number    : 123,
+      zerouns   : 0,    // Object.is( 0, +0 ) returns true
+      zeropos   : +0,
+      zeroneg   : -0,
       bool      : false,
       nul       : null,
       array     : [4,5,6],
@@ -35,10 +38,12 @@ console.log ( `[TEST # 2 : rectification of JSON.stringify() failures` ); try { 
 
       nan       : NaN,  
                     // forced to 'null' - fixed
-      inf       : Infinity,  
-                    // forced to 'null'
+      infpos    : Infinity,  
+                    // forced to 'null' - fixed
+      infneg    : -Infinity,  
+                    // forced to 'null' - fixed
       re        : /.*/,  
-                    // forced to {} 
+                    // forced to {} - fixed
       date      : new Date(),  
                     // stringified
       undef     : undefined,  
@@ -75,34 +80,68 @@ console.log ( `[TEST # 2 : rectification of JSON.stringify() failures` ); try { 
     // hierarchy of types, but may be refactored for performance.
 
 
+    
     let replacer = (key, value) => {
-            let valueType = typeof value
-            if ( valueType == 'object' )    { return value }
-            if ( Object.is (value, NaN) )   { return { _serlType: 'NaN' } } 
-            return value
-    }
-    // TODO: _serlType values could be optimised to be something other than strings
 
-    let reviver =   (key, value) => {
             let valueType = typeof value
-            if ( valueType == 'object')    { 
 
-                if ( value === null ) { return value }
-                
-                switch ( value._serlType) {
-                    case 'NaN':
-                        return NaN
-                        break
-                    default:
-                } 
-                return value 
+            if ( valueType == 'object' ) { 
+
+
+                if ( value instanceof Date )  { return { _serlType: 4,
+                                                         v: value.toISOString() }
+                }
+                if ( value instanceof RegExp )  return { _serlType: 3,
+                                                         v: value.toString().slice( 1, -1 ) }
+                /* otherwise literally */       return value 
+            }
+            if ( Object.is (value, NaN) )       return { _serlType: 0 }  
+            switch ( value ) {
+                case Infinity :                 return { _serlType: 1 } 
+                case -Infinity :                return { _serlType: 2 } 
             }
             return value
     }
+    // TODO: Instead of `{ _serlType : x }` consider `[ value? ].type = x` (test performance)
 
-    let result = JSON.stringify ( data, replacer, '\t' )
+    let reviver =   (key, value) => {
 
-    console.log( JSON.parse (result, reviver) ) 
+            let valueType = typeof value
+
+            switch ( valueType ) {
+
+                case 'object' :
+
+                    if ( value === null ) { return value }
+                    
+                    switch ( value._serlType) {
+                        case 0 :            return NaN 
+                        case 1 :            return Infinity
+                        case 2 :            return -Infinity
+                        case 3 :            return RegExp( value.v )
+                        case 4 :            return new Date( value.v )
+                                                // Excluding `new` does not work
+                        default:            /* do nothing */
+                    } 
+                    return value 
+
+                    break
+            }
+
+            return value
+    }
+
+    let stringified
+    { // Disables the default toJSON() from stringifying
+        let defaultDateToJSON   = Date.prototype.toJSON
+        delete Date.prototype.toJSON
+        stringified = JSON.stringify ( data, replacer, '\t' )
+        Date.prototype.toJSON   = defaultDateToJSON
+    }
+
+
+    console.log ( stringified )
+    console.log ( JSON.parse (stringified, reviver) ) 
 
     return 'see console.log() above' 
 
