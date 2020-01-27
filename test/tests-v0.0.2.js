@@ -48,9 +48,21 @@ console.log ( `[TEST # 2 : rectification of JSON.stringify() failures` ); try { 
                     // stringified - fixed
       undef     : undefined,  
                     // lost
-      longFunEx : function () { console.log ('serialise me') },
+      longFunEx : function (arg1, arg2) {     
+        console.log ('longFunEx seems to be running')
+        console.log ('    this: '       + this)
+        console.log ('    globalThis: ' + globalThis)
+        console.log ('    window: '     + window)
+        console.log ('    args1,2: '       + arg1 + arg2)
+      },
                     // lost
-      shortFunEx: () => console.log ('serialise me'),
+      shortFunEx: (arg1, arg2) => {
+        console.log ('shortFunEx seems to be running')
+        console.log ('    this: '       + this)
+        console.log ('    globalThis: ' + globalThis)
+        console.log ('    window: '     + window)
+        console.log ('    args1,2: '       + arg1 + arg2)
+      },
                     // lost
       sym       : symVal,
                     // lost
@@ -98,8 +110,12 @@ console.log ( `[TEST # 2 : rectification of JSON.stringify() failures` ); try { 
 
                 case 'function':
                     let stringifiedFunction = value.toString()
-                        // TODO: it is possible here to test for fat arrow, or
-                        // long function expressions
+                        //  TODO: it is possible here to test for fat arrow, or
+                        //      long function expressions.
+                        //  - fat arrows without braces need to be braced
+                        //  - fat arrows with braces need to be untouched
+                        //  - 'use strict;' must be added before any function
+                        //  expression
                                                     return { _serlType: 5,
                                                              v: stringifiedFunction }
 
@@ -134,9 +150,19 @@ console.log ( `[TEST # 2 : rectification of JSON.stringify() failures` ); try { 
                         case 4 :            return new Date( value.v )
                                                 // Excluding `new` does not work
 
-                        case 5 :            return Function ( '(' + value.v + ')' )
+                        case 5 :            return Function ( `"use strict"; 
+
+                            //console.log ('arguments: ' + JSON.stringify(arguments) )
+
+                            return (${value.v}).apply ( null, arguments) ` )
+                                                //
                                                 // Declares function expressions
                                                 // in the global scope.
+                                                //
+                                                // Here, `this` is null, but
+                                                // spawn/n might make it the
+                                                // calling Proc.
+                                                
 
                         /* default:         do nothing */
                     } 
@@ -151,18 +177,21 @@ console.log ( `[TEST # 2 : rectification of JSON.stringify() failures` ); try { 
     }
 
     let stringified
-    { // Disables the default toJSON() from stringifying
+    { 
+        // Disables the default toJSON() from stringifying
         let defaultDateToJSON   = Date.prototype.toJSON
         delete Date.prototype.toJSON
         stringified = JSON.stringify ( data, replacer, '\t' )
         Date.prototype.toJSON   = defaultDateToJSON
     }
-
-
     console.log ( stringified )
-    console.log ( JSON.parse (stringified, reviver) ) 
+    
+    let parsed = JSON.parse (stringified, reviver)
+    console.log ( parsed )
+    console.log ( parsed.longFunEx  ( 'iAmArg1', 'iAmArg2' ) )
+    console.log ( parsed.shortFunEx ( 'iAmArg1', 'iAmArg2' ) )
 
-    return 'see console.log() above' 
+    return 'see console.log ( parsed ) above' 
 
 })() }]]` ) } catch (e) { console.error(e) } finally {console.log('] - - ')}
 
