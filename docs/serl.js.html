@@ -146,7 +146,7 @@ export class Node {
         *   'frequent additions and removals of key-value pairs'
         *
         *   @property {module:Serl.Pid} @keys Keys in the Map should be
-        *   instances of this class.
+        *   {@link module:Serl.ProcMap} 
         *
         *   @property {module:Serl.Proc} @values Values in the Map should be
         *   instances of this class.
@@ -159,7 +159,7 @@ export class Node {
         *
         *   @todo Should ProcMap have its own class? 
         */
-        this.procMap    =   new Map( [ ] )  
+        this.procMap    =   new ProcMap ()  
         
         /**
         *   @property module:Serl.'Node#procMap'.counter
@@ -339,7 +339,14 @@ export class Node {
      */
 
     spawn () {
-        let nodeName, procIndex, newProc, module, fun, funArgs
+
+        let nodeName, 
+            procIndex, 
+            newProc, 
+            module, 
+            fun, funArgs, stringifiedFun,
+            parsedFun, stringifiedFunArgs, parsedFunArgs
+
         switch (arguments.length) {
             case 0:
                 throw Error( 'Node.spawn/0 called; no implementation.' )
@@ -351,22 +358,15 @@ export class Node {
                     throw Error( 'Node.spawn/1 called with a non-function' ) 
                 }
 
-                nodeName    = this.name
-                procIndex   = ++this.procMap.counter
-                fun         = arguments[0]
+                nodeName        = this.name
+                procIndex       = ++this.procMap.counter
+                fun             = arguments[0]
 
-                newProc     = new Proc ( nodeName, procIndex, this )
-                //newProc.fun = fun
+                stringifiedFun  = JSON.stringify    ( fun, serialReplacer )
+                parsedFun       = JSON.parse        ( stringifiedFun, serialReviver )
 
-                //*
-                let stringified = JSON.stringify    ( fun, serialReplacer )
-                console.log ( stringified )
-
-                let parsed      = JSON.parse        ( stringified, serialReviver )
-                console.log ( parsed )
-
-                newProc.fun     = parsed
-                //*/
+                newProc         = new Proc ( nodeName, procIndex, this )
+                newProc.fun     = parsedFun
 
                 this.procMap.set ( newProc.pid, newProc )
                 newProc.fun([])
@@ -397,13 +397,18 @@ export class Node {
                 procIndex       = ++this.procMap.counter
                 module          = arguments[0]
                 fun             = module[arguments[1]]
-                funArgs    = arguments[2]
+                funArgs         = arguments[2]
+
+                stringifiedFun      = JSON.stringify    ( fun, serialReplacer )
+                parsedFun           = JSON.parse        ( stringifiedFun, serialReviver )
+                stringifiedFunArgs  = JSON.stringify    ( funArgs, serialReplacer )
+                parsedFunArgs       = JSON.parse        ( stringifiedFunArgs, serialReviver )
 
                 newProc     = new Proc ( nodeName, procIndex, this )
-                newProc.fun = fun
+                newProc.fun = parsedFun
 
                 this.procMap.set ( newProc.pid, newProc )
-                newProc.fun ( ... funArgs )
+                newProc.fun ( ... parsedFunArgs )
                 break
             case 4:
                 throw Error( 'Node.spawn/4 called; no implementation.' )
@@ -542,11 +547,7 @@ export class Proc {
                     throw Error (`Proc.send/2 called, first argument was not an
                         instance of Pid`)
                 }
-
-                //console.log(`    ${this}.send/2: supposed to send a message to ${dest}`)
-
                 this.node.procMap.get ( dest ).mailHandler ( msg )
-                 
                 break
             case 3:
                 throw Error( 'Proc.send/3 called; no implementation.' )
@@ -684,7 +685,7 @@ export class Proc {
  *  Constructor for objects analogous to an [OTP Pid term]{@link
  *  http://erlang.org/doc/reference_manual/data_types.html#pid}.
  *
- *  @todo Do we need to validate argument types in the constructor?
+ *  @todo validate argument types in the constructor!
  *
  */
 export class Pid {
@@ -709,6 +710,7 @@ export class Pid {
     toString () {
         return `[object Pid&lt;${this.nodeIndex}.${this.procIndex}>]`
     }
+
 } 
 
 /**
@@ -885,9 +887,11 @@ export let serialReplacer = (key, value) => {
         //          instead
 
         case 'object' :
-            if ( value instanceof Date )  { return { _serlType: 4,
-                                                     v: value.toISOString() }
-            }
+            if ( value instanceof Pid ) {   return { _serlType: 7,
+                                                     v: { nodeIndex: value.nodeIndex,
+                                                          procIndex: value.procIndex } } }
+            if ( value instanceof Date ) {  return { _serlType: 4,
+                                                     v: value.toISOString() } }
             if ( value instanceof RegExp )  return { _serlType: 3,
                                                      v: value.toString().slice( 1, -1 ) }
             /* otherwise literally */       return value 
@@ -931,13 +935,11 @@ export let serialReviver = (key, value) => {
     let valueType = typeof value
 
     switch ( valueType ) {
-
+//
         case 'object' :
 
             if ( value === null ) { return value }
            
-            console.log ( value ) 
-
             switch ( value._serlType) {
                 case 0 :            return NaN 
                 case 1 :            return Infinity
@@ -945,28 +947,26 @@ export let serialReviver = (key, value) => {
                 case 3 :            return RegExp( value.v )
                 case 4 :            return new Date( value.v )
                                         // Excluding `new` does not work
-
                 case 5 :            return Function ( `"use strict"; 
                     return (${value.v}).apply ( this, arguments ) ` )
                                         //
                                         //  Declares function expressions
                                         //  in the global scope.
                                         //
-                                        //  Here, `this` is the function
-                                        //  object itself, enabling functions
-                                        //  passed to spawn/n to recurse upon
-                                        //  themselves.
-                                        //
+                                        //  Here, `this` is the 
+                                        //  calling Proc. 
+                                        // 
                                         //  Other options:
                                         //
-                                        //  spawn/n might make `this` the
-                                        //  calling Proc. 
+                                        //  spawn/n might make `this` the function
+                                        //  object itself. 
                                         //
                                         //  Generally, letting `this` be `null` is
                                         //  safest, to prevent access to
                                         //  parent or global objects.
-                case 6 :                    
-                    return BigInt ( value.v )
+                case 6 :            return BigInt ( value.v )
+                case 7 :            return new Pid (    value.v.nodeIndex,
+                                                        value.v.procIndex )
 
                 /* default:         do nothing */
             } 
@@ -979,6 +979,20 @@ export let serialReviver = (key, value) => {
 
     return value
 }
+
+/**
+ *  @class module:Serl.ProcMap
+ *  @todo **DOCUMENTATION**
+ */
+
+class ProcMap extends Map {
+    set ( pid, value ) {
+        return super.set ( pid.nodeIndex + '.' + pid.procIndex, value )
+    }
+    get ( pid ) {
+        return super.get ( pid.nodeIndex + '.' + pid.procIndex )
+    }
+}
 </code></pre>
         </article>
     </section>
@@ -989,13 +1003,13 @@ export let serialReviver = (key, value) => {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Serl.html">Serl</a></li></ul><h3>Namespaces</h3><ul><li><a href="module-Serl._Node_nodeMap_.html">'Node#nodeMap'</a></li><li><a href="module-Serl._Node_procMap_.html">'Node#procMap'</a></li></ul><h3>Classes</h3><ul><li><a href="module-Serl.Node.html">Node</a></li><li><a href="module-Serl.Pid.html">Pid</a></li><li><a href="module-Serl.Proc.html">Proc</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Serl.html">Serl</a></li></ul><h3>Namespaces</h3><ul><li><a href="module-Serl._Node_nodeMap_.html">'Node#nodeMap'</a></li><li><a href="module-Serl._Node_procMap_.html">'Node#procMap'</a></li></ul><h3>Classes</h3><ul><li><a href="module-Serl.Node.html">Node</a></li><li><a href="module-Serl.Pid.html">Pid</a></li><li><a href="module-Serl.Proc.html">Proc</a></li><li><a href="module-Serl.ProcMap.html">ProcMap</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Wed Jan 29 2020 16:36:50 GMT+0800 (Malaysia Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Wed Jan 29 2020 19:51:43 GMT+0800 (Malaysia Time)
 </footer>
 
 <script> prettyPrint(); </script>
