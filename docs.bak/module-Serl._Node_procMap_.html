@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Namespace: 'Node#nodeMap'</title>
+    <title>JSDoc: Namespace: 'Node#procMap'</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Namespace: 'Node#nodeMap'</h1>
+    <h1 class="page-title">Namespace: 'Node#procMap'</h1>
 
     
 
@@ -29,7 +29,7 @@
 <header>
     
         <h2>
-            <span class="ancestors"><a href="module-Serl.html">Serl</a>.</span>'Node#nodeMap'</h2>
+            <span class="ancestors"><a href="module-Serl.html">Serl</a>.</span>'Node#procMap'</h2>
         
     
 </header>
@@ -38,11 +38,12 @@
     <div class="container-overview">
     
         
-            <div class="description"><p>A map of a node's known (currently connected, and
-previously connected)) nodes, including itself.
+            <div class="description"><p>A map of a node's local processes (any instances of
+Proc which were created by calling
+spawn/n on that node.
 Here we use a Map, because we anticipate frequent
-lookups based on given <a href="module-Serl.html#.NodeIndex">NodeIndex</a>s. We
-also expect 'frequent additions and removals of key-value pairs'</p></div>
+lookups based on given <a href="module-Serl.Pid.html">Pid</a>s. We also expect
+'frequent additions and removals of key-value pairs'</p></div>
         
 
         
@@ -80,7 +81,7 @@ also expect 'frequent additions and removals of key-value pairs'</p></div>
             <td class="type">
             
                 
-<span class="param-type"><a href="module-Serl.html#.NodeIndex">module:Serl.NodeIndex</a></span>
+<span class="param-type"><a href="module-Serl.Pid.html">module:Serl.Pid</a></span>
 
 
             
@@ -91,7 +92,7 @@ also expect 'frequent additions and removals of key-value pairs'</p></div>
             
 
             <td class="description last"><p>Keys in the Map should be
-of this type.</p></td>
+instances of this class.</p></td>
         </tr>
 
     
@@ -104,7 +105,7 @@ of this type.</p></td>
             <td class="type">
             
                 
-<span class="param-type">described</span>
+<span class="param-type"><a href="module-Serl.Proc.html">module:Serl.Proc</a></span>
 
 
             
@@ -115,8 +116,7 @@ of this type.</p></td>
             
 
             <td class="description last"><p>Values in the Map should be
-of the form <code>{ name: <a href="module-Serl.Node.html#name">NodeName</a>
-}</code>.</p></td>
+instances of this class.</p></td>
         </tr>
 
     
@@ -129,7 +129,7 @@ of the form <code>{ name: <a href="module-Serl.Node.html#name">NodeName</a>
             <td class="type">
             
                 
-<span class="param-type">Serl.NodeIndex</span>
+<span class="param-type"><a href="module-Serl.html#.ProcIndex">module:Serl.ProcIndex</a></span>
 
 
             
@@ -139,7 +139,7 @@ of the form <code>{ name: <a href="module-Serl.Node.html#name">NodeName</a>
 
             
 
-            <td class="description last"><p>module:Serl.'Node#nodeMap'.counter</p></td>
+            <td class="description last"><p>module:Serl.'Node#procMap'.counter</p></td>
         </tr>
 
     
@@ -178,7 +178,7 @@ of the form <code>{ name: <a href="module-Serl.Node.html#name">NodeName</a>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line159">line 159</a>
+        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line110">line 110</a>
     </li></ul></dd>
     
 
@@ -190,13 +190,10 @@ of the form <code>{ name: <a href="module-Serl.Node.html#name">NodeName</a>
     <dt class="tag-todo">To Do:</dt>
     <dd class="tag-todo">
         <ul>
-            <li>Add nodeMap.counter to make this consistent with
-  procMap.counter; update docs to remind developers to enforce
+            <li>update docs to remind developers to enforce
   nodeIndex = parseInt(nodeIndex).</li>
         
-            <li>Values should have their own class.</li>
-        
-            <li>Should NodeMap have its own class?</li>
+            <li>Should ProcMap have its own class?</li>
         </ul>
     </dd>
     
@@ -224,21 +221,23 @@ of the form <code>{ name: <a href="module-Serl.Node.html#name">NodeName</a>
 
         
             
-<h4 class="name" id=".this.nodeMap.counter"><span class="type-signature">(static) </span>this.nodeMap.counter<span class="type-signature"></span></h4>
+<h4 class="name" id=".this.procMap.counter"><span class="type-signature">(static) </span>this.procMap.counter<span class="type-signature"></span></h4>
 
 
 
 
 <div class="description">
-    <p>This helps us avoid duplicate Serl.NodeIndexs on the
-local node, when generating a <a href="module-Serl.Pid.html">Pid</a>.</p>
-<p>Each node must track all previously known nodes, and so we want an
-incrementing counter, to ensure that for any single
-lifetime of a node, N, every other node that ever connects to N, has a
-unique NodeIndex from N's point of view.</p>
-<p>In the current implementation, the upper limit of trackable nodes connected
-to N in one lifetime seems to simply be the size of Node.nodeMap.counter.
-Here we impose a convention where the local node is index=0</p>
+    <p>This helps us avoid duplicate process-indices on the
+local node, when generating a Pid object. We want to use Map here,
+because we expect 'frequent additions and removals of key-value
+pairs'</p>
+<p>Each node must track all its previously spawned processes, and so we
+want an incrementing Node.procMap.counter, to ensure that for the lifetime
+of a node, N, all of N's local processes have a unique ProcIndex.</p>
+<p>In the current implementation, the upper limit seems to simply be
+the size of Node.procMap.counter. (In Erlang, the equivalent number
+is stored in 18 to 28 bits, after which numbers are reused...
+however in JavaScript, it seems we have almost 53 bits...)</p>
 </div>
 
 
@@ -273,7 +272,7 @@ Here we impose a convention where the local node is index=0</p>
 
         <tr>
             
-                <td class="name"><code>module:Serl.'Node#nodeMap'.counter</code></td>
+                <td class="name"><code>module:Serl.'Node#procMap'.counter</code></td>
             
 
             <td class="type">
@@ -323,7 +322,7 @@ Here we impose a convention where the local node is index=0</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line207">line 207</a>
+        <a href="serl.js.html">serl.js</a>, <a href="serl.js.html#line157">line 157</a>
     </li></ul></dd>
     
 
@@ -363,7 +362,7 @@ Here we impose a convention where the local node is index=0</p>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Wed Jan 29 2020 15:27:27 GMT+0800 (Malaysia Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Wed Jan 29 2020 15:12:40 GMT+0800 (Malaysia Time)
 </footer>
 
 <script> prettyPrint(); </script>

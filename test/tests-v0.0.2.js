@@ -22,171 +22,99 @@ console.log ( `[TEST # 2 : rectification of JSON.stringify() failures` ); try { 
     let symVal      =    Symbol.for('val')
 
     let data    =   {
-      string    : 'string',
-      number    : 123,
-      zerouns   : 0,    // Object.is( 0, +0 ) returns true
-      zeropos   : +0,
-      zeroneg   : -0,
-      bool      : false,
-      nul       : null,
-      array     : [4,5,6],
-      object    : {
-        a : 7,
-        b : 8,
-        c : 9,
-      },  
+        string    : 'string',
+        number    : 123,
+        zerouns   : 0,    // Object.is( 0, +0 ) returns true
+        zeropos   : +0,
+        zeroneg   : -0,
+        bool      : false,
+        nul       : null,
+        array     : [4,5,6],
+        object    : {
+          a : 7,
+          b : 8,
+          c : 9,
+        },  
 
-      nan       : NaN,  
-                    // forced to 'null' - fixed
-      infpos    : Infinity,  
-                    // forced to 'null' - fixed
-      infneg    : -Infinity,  
-                    // forced to 'null' - fixed
-      re        : /.*/,  
-                    // forced to {} - fixed
-      date      : new Date(),  
-                    // stringified - fixed
-      undef     : undefined,  
-                    // lost
-      longFunEx : function (arg1, arg2) {     
-        console.log ('longFunEx seems to be running')
-        console.log ('    this: '       + this)
-        console.log ('    globalThis: ' + globalThis)
-        console.log ('    window: '     + window)
-        console.log ('    args1,2: '       + arg1 + arg2)
-      },
-                    // lost
-      shortFunEx: (arg1, arg2) => {
-        console.log ('shortFunEx seems to be running')
-        console.log ('    this: '       + this)
-        console.log ('    globalThis: ' + globalThis)
-        console.log ('    window: '     + window)
-        console.log ('    args1,2: '       + arg1 + arg2)
-      },
-                    // lost
-      sym       : symVal,
-                    // lost
-      circFun   : function () {
-          this.description          =   'I am a circular function.'
-          this.circularReference    = this
-      },
-                    // lost
+        nan       : NaN,  
+                      // forced to 'null' - fixed
+        infpos    : Infinity,  
+                      // forced to 'null' - fixed
+        infneg    : -Infinity,  
+                      // forced to 'null' - fixed
+        re        : /.*/,  
+                      // forced to {} - fixed
+        date      : new Date(),  
+                      // stringified - fixed
+        undef     : undefined,  
+                      // lost - ok
+        longFunEx : function (arg1, arg2) {     
+          console.log ('longFunEx seems to be running')
+          console.log ('    this: '       + this)
+          console.log ('    globalThis: ' + globalThis)
+          console.log ('    window: '     + window)
+          console.log ('    args1,2: '       + arg1 + arg2)
+          return 'longFunEx returned value'
+        },
+                      // lost - fixed
+        shortFunEx: (arg1, arg2) => {
+          console.log ('shortFunEx seems to be running')
+          console.log ('    this: '       + this)
+          console.log ('    globalThis: ' + globalThis)
+          console.log ('    window: '     + window)
+          console.log ('    args1,2: '       + arg1 + arg2)
+          return 'shortFunEx returned value'
+        },
+                      // lost - fixed
+        sym       : symVal,
+                      // lost - ok
+
+        //  Serl will not explicitly support circular references.
+        //
+        //  longCircFunEx   : function () {
+        //    this.circularReference    = this
+        //    console.log ('longCircFunEx seems to be running')
+        //    console.log ('    this: '       + this)
+        //    //console.log ('    this: '       + this.circularReference)
+        //  },
+                      // lost
     }
 
     data[keyedSym]      =   'value of keyed symbol'
-                    // lost
+                    // lost - ok 
 
-    data.circArray     =   [11,22,33]
-    //data.circArray[4]  =   data.circArray
-                    // TypeError 
+    //  Serl will not explicitly support circular references.
+    //
+    //  data.circArray     =   [11,22,33]
+    //  //data.circArray[4]  =   data.circArray
+    //                  // TypeError 
 
-    data.circObject    =   { w: 44, x: 55, y: 66 }
-    //data.circObject.z  =   data.circObject
-                    // TypeError 
+    //  data.circObject    =   { w: 44, x: 55, y: 66 }
+    //  //data.circObject.z  =   data.circObject
+                        // TypeError 
 
     let bigIntString    =   '244684765745644357464554765466456476556467565'
-    //data.bigInt         =   BigInt ( bigIntString )
-                    // TypeError 
+    data.bigInt         =   BigInt ( bigIntString )
+                    // TypeError - fixed
 
     // TODO: replacer and reviver below: are written here to demonstrate
     // hierarchy of types, but may be refactored for performance.
 
 
     
-    let replacer = (key, value) => {
 
-            let valueType = typeof value
-            switch ( valueType ) {
-                // TODO:    test if performance improves by testing valuetype[0]
-                //          instead
-
-                case 'object':
-                    if ( value instanceof Date )  { return { _serlType: 4,
-                                                             v: value.toISOString() }
-                    }
-                    if ( value instanceof RegExp )  return { _serlType: 3,
-                                                             v: value.toString().slice( 1, -1 ) }
-                    /* otherwise literally */       return value 
-
-                case 'function':
-                    let stringifiedFunction = value.toString()
-                        //  TODO: it is possible here to test for fat arrow, or
-                        //      long function expressions.
-                        //  - fat arrows without braces need to be braced
-                        //  - fat arrows with braces need to be untouched
-                        //  - 'use strict;' must be added before any function
-                        //  expression
-                                                    return { _serlType: 5,
-                                                             v: stringifiedFunction }
-
-                /* default: do nothing */
-            }
-
-            if ( Object.is (value, NaN) )       return { _serlType: 0 }  
-            switch ( value ) {
-                case Infinity :                 return { _serlType: 1 } 
-                case -Infinity :                return { _serlType: 2 } 
-                /* default: do nothing */
-            }
-            return value
-    }
-    // TODO: Instead of `{ _serlType : x }` consider `[ value? ].type = x` (test performance)
-
-    let reviver =   (key, value) => {
-
-            let valueType = typeof value
-
-            switch ( valueType ) {
-
-                case 'object' :
-
-                    if ( value === null ) { return value }
-                    
-                    switch ( value._serlType) {
-                        case 0 :            return NaN 
-                        case 1 :            return Infinity
-                        case 2 :            return -Infinity
-                        case 3 :            return RegExp( value.v )
-                        case 4 :            return new Date( value.v )
-                                                // Excluding `new` does not work
-
-                        case 5 :            return Function ( `"use strict"; 
-
-                            //console.log ('arguments: ' + JSON.stringify(arguments) )
-
-                            return (${value.v}).apply ( null, arguments) ` )
-                                                //
-                                                // Declares function expressions
-                                                // in the global scope.
-                                                //
-                                                // Here, `this` is null, but
-                                                // spawn/n might make it the
-                                                // calling Proc.
-                                                
-
-                        /* default:         do nothing */
-                    } 
-                    return value 
-
-                    break
-
-                /* default: do nothing */
-            }
-
-            return value
-    }
 
     let stringified
     { 
         // Disables the default toJSON() from stringifying
         let defaultDateToJSON   = Date.prototype.toJSON
         delete Date.prototype.toJSON
-        stringified = JSON.stringify ( data, replacer, '\t' )
+        stringified = JSON.stringify ( data, Serl.serialReplacer, '\t' )
         Date.prototype.toJSON   = defaultDateToJSON
     }
     console.log ( stringified )
     
-    let parsed = JSON.parse (stringified, reviver)
+    let parsed = JSON.parse (stringified, Serl.serialReviver)
     console.log ( parsed )
     console.log ( parsed.longFunEx  ( 'iAmArg1', 'iAmArg2' ) )
     console.log ( parsed.shortFunEx ( 'iAmArg1', 'iAmArg2' ) )
@@ -195,6 +123,10 @@ console.log ( `[TEST # 2 : rectification of JSON.stringify() failures` ); try { 
 
 })() }]]` ) } catch (e) { console.error(e) } finally {console.log('] - - ')}
 
+console.error ( `[TEST (above): note that parsed function expressions have their
+\`this\` value assigned to \`null\`.]` )
+console.error ( `[TEST (above): support for more types, such as \`TypedArray\` to
+be added in the future.`)
 
 
 

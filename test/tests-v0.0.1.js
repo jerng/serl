@@ -323,7 +323,9 @@ want to read the code... f1e is the most sophisticated option`); try { console.l
             this.send ( recipientPid, 'ohai again' )
 
             let counter = 0
-            while ( counter < 15000 ) { // do your 15k test here
+            
+            while ( counter < 1 ) { // shim
+            //while ( counter < 15000 ) { // do your 15k test here
                 counter ++
                 this.send ( recipientPid, 'ohai' + counter )
             }
