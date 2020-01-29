@@ -38,6 +38,7 @@ console.log ( `[TEST #2.1 : how readable is the Pid's .toString()?` ); try {
         return new Serl.Pid ( 'placeholderNodeName', 'placeholderProcIndex' )
 })() }]]` ) } catch (e) { console.error(e) } finally {console.log('] - - ')}
 
+//*
 console.log ( `[TEST #3 : spawn(()=>{})?` )
 try { console.log ( `OK: CODE [[
         (new Serl.Node).spawn(()=>{})
@@ -46,6 +47,7 @@ try { console.log ( `OK: CODE [[
     ]]` ) } 
 catch (e) { console.error(e) } 
 finally {console.log('] - - ')}
+//*/
 
 console.log ( `[TEST #3.1 : spawn(1)?` )
 try { console.error ( `NO ERROR THROWN: CODE [[ 
@@ -62,6 +64,7 @@ catch (e) { console.log(`OK: CODE [[
     ]]`) } 
 finally {console.log('] - - ')}
 
+//*
 console.log ( `[TEST #3.2 : do successive calls to spawn() increment the Proc
 Pids in the Node's procMap?` ); try { console.log ( `OK: CODE [[  
         let n = new Serl.Node ('test3.2')
@@ -72,7 +75,9 @@ Pids in the Node's procMap?` ); try { console.log ( `OK: CODE [[
 })() }]]` ) } catch (e) { console.error(e) } finally {console.log('] - - ')}
 
 console.error ( `[TEST #3.n : tests for arities != 1, unwritten at this time; NO DISTRIBUTED COMPUTING.]` )
+//*/
 
+//*
 console.log ( `[TEST #3.3 : process is spawned, then what?` ); 
 try { console.log ( `OK: CODE [[  
         let n = new Serl.Node ('test3.3')
@@ -85,6 +90,7 @@ try { console.log ( `OK: CODE [[
         containing this line`)} )
         return p
 })() }]]` ) } catch (e) { console.error(e) } finally {console.log('] - - ')}
+//*/
 
 console.log ( `[TEST #4 : Node's procMap is readable ?` )
 try { console.log ( `OK: CODE [[ (new Serl.Node).procMap.counter ]] RETURNED
@@ -128,6 +134,7 @@ console.log ( `[TEST #5.1 : how readable is the Proc's .toString()?` ); try { co
 
 console.error ( `[TEST #6 : what happens to procMap and its counter when processes are removed? What happens when processes are stopped?]` )
 
+//*
 console.log ( `[TEST #3.4 : how do processes receive messages?`)
 console.error (`3.4: break this up into a series of small tests`)
     //  Code it here, then move it to serl.js
@@ -137,7 +144,6 @@ console.error (`3.4: break this up into a series of small tests`)
     //  If fun DOES call Serl.Proc.receive(), then fun has to AWAIT its result,
     //  which must be a Promise
 
-let view_all_3_4 = false
 try { console.log ( `OK: CODE [[  
 
     (sorry, for now: it's pretty long, so best you look in the source)
@@ -148,6 +154,8 @@ try { console.log ( `OK: CODE [[
 
         let n   =   new Serl.Node ('test3.4')
         let F1  =   async function(){                                     
+
+            let view_all_3_4 =true 
 
             console.log (`NEWS-3.4, F1: ${this} is spawning; logging the function body
                 line BEFORE this.receive()'s 1st call`) 
@@ -226,6 +234,11 @@ console.error ( `[TEST #7 : process link interaction, unimplemented`)
 console.error ( `[TEST #8 : process exit signals interaction, unimplemented`)
 console.error ( `[TEST #9 : process monitoring interaction, unimplemented`)
 
+console.error ( `[TEST #3.4: should be made async, so that it finishes before
+#3.5 begins.]` )
+//*/
+
+//*
 console.log ( `[TEST #3.5 : how do processes send messages? (includes 15k
 message test site) (f1a,b,c,d,e, are mutually exclusive options for testing; you
 want to read the code... f1e is the most sophisticated option`); try { console.log ( `OK: CODE [[  
@@ -322,8 +335,10 @@ want to read the code... f1e is the most sophisticated option`); try { console.l
             this.send ( recipientPid, 'ohai' )
             this.send ( recipientPid, 'ohai again' )
 
+            console.error ( `[TEST (above) : do your 15k test by uncommenting
+            the shim, below.]` )
+
             let counter = 0
-            
             while ( counter < 1 ) { // shim
             //while ( counter < 15000 ) { // do your 15k test here
                 counter ++
@@ -358,7 +373,7 @@ want to read the code... f1e is the most sophisticated option`); try { console.l
 console.error (`WARNING: 3.5, here f1bNamed makes a tail-call to itself, but it is
 not clear that this will not blow the call-stack; see note at f1bNamed; check`)
 
-
+//*/
 
 
 /* template test (NO-expected-error):
