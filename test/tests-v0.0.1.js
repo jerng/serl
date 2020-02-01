@@ -15,10 +15,10 @@ finally {console.log('] - - ')}
 console.log ( `[TEST #1.2 : does static method Pid.nodeIndexFromNodeName()
     work?` ); try { console.log ( `OK: CODE [[  
         let n = new Serl.Node ('test1.2')
-        return Serl.Node.nodeIndexFromNodeName ( n, n.name )
+        return Serl.Proc.nodeIndexFromNodeName ( n, n.name )
     ]] RETURNED [[${(()=>{
         let n = new Serl.Node ('test1.2')
-        return Serl.Node.nodeIndexFromNodeName ( n, n.name )
+        return Serl.Proc.nodeIndexFromNodeName ( n, n.name )
 })() }]]` ) } catch (e) { console.error(e) } finally {console.log('] - - ')}
 
 console.log ( `[TEST #2 : does the Pid class / function / object exist?` )
@@ -339,8 +339,8 @@ want to read the code... f1e is the most sophisticated option`); try { console.l
             the shim, below.]` )
 
             let counter = 0
-            while ( counter < 1 ) { // shim
-            //while ( counter < 15000 ) { // do your 15k test here
+            //while ( counter < 1 ) { // shim
+            while ( counter < 15000 ) { // do your 15k test here
                 counter ++
                 this.send ( recipientPid, 'ohai' + counter )
             }

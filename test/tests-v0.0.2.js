@@ -1,4 +1,5 @@
-import * as Serl from '../lib/serl.js'
+import * as Serl from   '../lib/serl.js'
+import * as SSON from   '../lib/sson/sson.js'
 
 console.log ( `[TEST # 1 : demonstration of JSON.stringify() failures; check
 against
@@ -109,12 +110,12 @@ console.log ( `[TEST # 2 : rectification of JSON.stringify() failures` ); try { 
         // Disables the default toJSON() from stringifying
         let defaultDateToJSON   = Date.prototype.toJSON
         delete Date.prototype.toJSON
-        stringified = JSON.stringify ( data, Serl.serialReplacer, '\t' )
+        stringified = JSON.stringify ( data, SSON.replacer, '\t' )
         Date.prototype.toJSON   = defaultDateToJSON
     }
     console.log ( stringified )
     
-    let parsed = JSON.parse (stringified, Serl.serialReviver)
+    let parsed = JSON.parse (stringified, SSON.reviver)
     console.log ( parsed )
     console.log ( parsed.longFunEx  ( 'iAmArg1', 'iAmArg2' ) )
     console.log ( parsed.shortFunEx ( 'iAmArg1', 'iAmArg2' ) )
@@ -127,7 +128,6 @@ console.error ( `[TEST (above): note that parsed function expressions have their
 \`this\` value assigned to \`null\`.]` )
 console.error ( `[TEST (above): support for more types, such as \`TypedArray\` to
 be added in the future.`)
-
 
 
 /*
