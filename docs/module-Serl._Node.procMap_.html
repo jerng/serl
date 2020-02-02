@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Class: ProcMap</title>
+    <title>JSDoc: Namespace: 'Node.procMap'</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Class: ProcMap</h1>
+    <h1 class="page-title">Namespace: 'Node.procMap'</h1>
 
     
 
@@ -28,8 +28,8 @@
 
 <header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>
-            <span class="ancestors"><a href="module-Serl.html">Serl</a>.</span>ProcMap<span class="signature">()</span><span class="type-signature"></span></h2>
+        <h2>
+            <span class="ancestors"><a href="module-Serl.html">Serl</a>.</span>'Node.procMap'</h2>
         
     
 </header>
@@ -38,40 +38,15 @@
     <div class="container-overview">
     
         
-
-    
-
-    
-    <h4 class="name" id="ProcMap"><span class="type-signature"></span>new ProcMap<span class="signature">()</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>Intended primarily for use at <a href="module-Serl.Node.html#procMap">Node.procMap</a>.</p>
-<p>A map of a node's local processes (any instances of
+            <div class="description"><p>A map of a node's local processes (any instances of
 Proc which were created by calling
 spawn/n on that node.
 Here we use a Map, because we anticipate frequent
 lookups based on given <a href="module-Serl.Pid.html">Pid</a>s. We also expect
-'frequent additions and removals of key-value pairs'</p>
-<p>Each node must track all its previously spawned processes, and so we
-want an incrementing <a href="module-Serl.ProcMap.html#.counter">ProcMap.counter</a>, to ensure that for the lifetime
-of a node, N, all of N's local processes have a unique ProcIndex.</p>
-</div>
+'frequent additions and removals of key-value pairs'</p></div>
+        
 
-
-
-
-
-
-
-
-
-
-
+        
 
 
     <h5 class="subsection-title">Properties:</h5>
@@ -203,7 +178,7 @@ instances of this class.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="classes_procMap.js.html">classes/procMap.js</a>, <a href="classes_procMap.js.html#line1">line 1</a>
+        <a href="classes_node.js.html">classes/node.js</a>, <a href="classes_node.js.html#line72">line 72</a>
     </li></ul></dd>
     
 
@@ -216,7 +191,7 @@ instances of this class.</p></td>
     <dd class="tag-todo">
         <ul>
             <li>update docs to remind developers to enforce
- nodeIndex = parseInt(nodeIndex).</li>
+  nodeIndex = parseInt(nodeIndex).</li>
         
             <li>Should ProcMap have its own class?</li>
         </ul>
@@ -225,24 +200,7 @@ instances of this class.</p></td>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        
     
     </div>
 
@@ -263,14 +221,19 @@ instances of this class.</p></td>
 
         
             
-<h4 class="name" id=".counter"><span class="type-signature">(static) </span>counter<span class="type-signature"></span></h4>
+<h4 class="name" id=".this.procMap.counter"><span class="type-signature">(static) </span>this.procMap.counter<span class="type-signature"></span></h4>
 
 
 
 
 <div class="description">
     <p>This helps us avoid duplicate process-indices on the
-local node, when generating a Pid object.</p>
+local node, when generating a Pid object. We want to use Map here,
+because we expect 'frequent additions and removals of key-value
+pairs'</p>
+<p>Each node must track all its previously spawned processes, and so we
+want an incrementing Node.procMap.counter, to ensure that for the lifetime
+of a node, N, all of N's local processes have a unique ProcIndex.</p>
 <p>In the current implementation, the upper limit seems to simply be
 the size of Node.procMap.counter. (In Erlang, the equivalent number
 is stored in 18 to 28 bits, after which numbers are reused...
@@ -279,6 +242,53 @@ however in JavaScript, it seems we have almost 53 bits...)</p>
 
 
 
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>module:Serl.'Node.procMap'.counter</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
 
 
 
@@ -312,7 +322,7 @@ however in JavaScript, it seems we have almost 53 bits...)</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="classes_procMap.js.html">classes/procMap.js</a>, <a href="classes_procMap.js.html#line42">line 42</a>
+        <a href="classes_node.js.html">classes/node.js</a>, <a href="classes_node.js.html#line119">line 119</a>
     </li></ul></dd>
     
 
@@ -346,13 +356,13 @@ however in JavaScript, it seems we have almost 53 bits...)</p>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Serl.html">Serl</a></li><li><a href="module-SSON.html">SSON</a></li></ul><h3>Namespaces</h3><ul><li><a href="module-Serl._Node.nodeMap_.html">'Node.nodeMap'</a></li></ul><h3>Classes</h3><ul><li><a href="module-Serl.Node.html">Node</a></li><li><a href="module-Serl.Pid.html">Pid</a></li><li><a href="module-Serl.Proc.html">Proc</a></li><li><a href="module-Serl.ProcMap.html">ProcMap</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Serl.html">Serl</a></li><li><a href="module-SSON.html">SSON</a></li></ul><h3>Namespaces</h3><ul><li><a href="module-Serl._Node.nodeMap_.html">'Node.nodeMap'</a></li><li><a href="module-Serl._Node.procMap_.html">'Node.procMap'</a></li></ul><h3>Classes</h3><ul><li><a href="module-Serl.Node.html">Node</a></li><li><a href="module-Serl.Pid.html">Pid</a></li><li><a href="module-Serl.Proc.html">Proc</a></li><li><a href="module-Serl.ProcMap.html">ProcMap</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Feb 02 2020 18:32:08 GMT+0800 (Malaysia Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Feb 02 2020 17:33:55 GMT+0800 (Malaysia Time)
 </footer>
 
 <script> prettyPrint(); </script>
