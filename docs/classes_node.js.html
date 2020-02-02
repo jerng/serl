@@ -1,4 +1,32 @@
-import { Proc } from        './proc.js'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: classes/node.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: classes/node.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { Proc } from        './proc.js'
 import { ProcMap } from     './procMap.js'
 import * as SSON from       '../sson/sson.js'
 
@@ -58,8 +86,8 @@ class Node {
         *   @property module:Serl.Node#name 
         *   @type {String}
         *   @todo In OTP convention, this depends on -name vs -sname flags
-        *   @description Has the form <code>given@host</code>, which is based on
-        *   the given-name of each call to <code>Node(given)</code>. Analogous
+        *   @description Has the form &lt;code>given@host&lt;/code>, which is based on
+        *   the given-name of each call to &lt;code>Node(given)&lt;/code>. Analogous
         *   to an OTP [node name]{@link
         *   https://erlang.org/doc/reference_manual/distributed.html#nodes}
         *
@@ -131,8 +159,8 @@ class Node {
         *   of this type.
         *
         *   @property { described } @values Values in the Map should be
-        *    of the form <code>{ name: [NodeName]{@link module:Serl.Node#name}
-        *   }</code>. 
+        *    of the form &lt;code>{ name: [NodeName]{@link module:Serl.Node#name}
+        *   }&lt;/code>. 
 
         *
         *   @property {Serl.NodeIndex} counter {@link
@@ -177,10 +205,10 @@ class Node {
      *  @description Implements various arities of spawn/n.
      *  Spawns an instance of [Proc]{@link module:Serl.Proc} on some a certain
      *  instance of [Node]{@link module:Serl.Node}. The keyword
-     *  <code>this</code> in any <code>fun</code> passed to spawn/n will refer
-     *  to the spawned <code>proc</code>.
+     *  &lt;code>this&lt;/code> in any &lt;code>fun&lt;/code> passed to spawn/n will refer
+     *  to the spawned &lt;code>proc&lt;/code>.
      *      
-     *  > #### <span style="color:red;">**WARNING: Pass-by-value Only**</span>
+     *  > #### &lt;span style="color:red;">**WARNING: Pass-by-value Only**&lt;/span>
      *  >
      *  > **Introduction to Concern:** 
      *  >
@@ -202,15 +230,15 @@ class Node {
      *  algorithm](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm)
      *  > doesn't handle function objects. Using a third-party library forces a
      *  > dependency upon Serl, so we're avoiding this path. Two options remain:
-     *  > <ol>
-     *  >   <li>Leave Serl-users to handle reference-removal</li>
-     *  >   <li>Write a Serl-specific cloning method</li>
-     *  > </ol>
+     *  > &lt;ol>
+     *  >   &lt;li>Leave Serl-users to handle reference-removal&lt;/li>
+     *  >   &lt;li>Write a Serl-specific cloning method&lt;/li>
+     *  > &lt;/ol>
      *  >
      *  >
-     *  > | <span style="background-color:#fcc;">The Case for (1)</style> | <span style="background-color:#cfc;">The Case for (2)</style> |
+     *  > | &lt;span style="background-color:#fcc;">The Case for (1)&lt;/style> | &lt;span style="background-color:#cfc;">The Case for (2)&lt;/style> |
      *  > |------------------|------------------|
-     *  > | <p>The minimal approach is to do nothing. In this approach, passing-by-value only would be managed by the user/developer. Following OTP convention, developers should not design programs to require a large datum to be passed as an argument.  </p> <p>Yet under this approach, should we conduct a partial clone, as is the case with most cloning libraries, or should we attempt to fully clone methods as well? Well, it turns out that we can't ignore functions since even spawn/1 is called on a function, which needs to be unreferenced from anywhere else.</p> <p>So if we're going to implement function cloning, then we might as well proceed to (2)...</p> | <p>This extensive approach increases the probability that Serl is actually used correctly. Since correctness in terms of following OTP protocols is the point of Serl, we now embark on this track.</p>
+     *  > | &lt;p>The minimal approach is to do nothing. In this approach, passing-by-value only would be managed by the user/developer. Following OTP convention, developers should not design programs to require a large datum to be passed as an argument.  &lt;/p> &lt;p>Yet under this approach, should we conduct a partial clone, as is the case with most cloning libraries, or should we attempt to fully clone methods as well? Well, it turns out that we can't ignore functions since even spawn/1 is called on a function, which needs to be unreferenced from anywhere else.&lt;/p> &lt;p>So if we're going to implement function cloning, then we might as well proceed to (2)...&lt;/p> | &lt;p>This extensive approach increases the probability that Serl is actually used correctly. Since correctness in terms of following OTP protocols is the point of Serl, we now embark on this track.&lt;/p>
      *  >
      *  >
      *  >
@@ -218,8 +246,8 @@ class Node {
      *
      *  ##### spawn/1
      *  Spawns a Proc object on the parent node, which applies
-     *  <code>fun</code> to an empty array <code>[]</code>. See
-     *  <a href="http://erlang.org/doc/man/erlang.html#spawn-1">OTP docs</a>.
+     *  &lt;code>fun&lt;/code> to an empty array &lt;code>[]&lt;/code>. See
+     *  &lt;a href="http://erlang.org/doc/man/erlang.html#spawn-1">OTP docs&lt;/a>.
      *
      *  ###### Parameters:
      *
@@ -235,24 +263,24 @@ class Node {
      *  accessed via a module) to a list of arguments, in the manner of:
      *
      *  ```
-     *  module[funName]( ... funArgs )</code>
+     *  module[funName]( ... funArgs )&lt;/code>
      *  ```
      *  See 
-     *  <a href="http://erlang.org/doc/man/erlang.html#spawn-3">OTP docs</a>.
+     *  &lt;a href="http://erlang.org/doc/man/erlang.html#spawn-3">OTP docs&lt;/a>.
      *  ###### Parameters:
      *
      *  | Name  | Type | Description |
      *  |-------|------|-------------|
      *  | module | Object | An object representing a code Module, with callable methods.
-     *  | funName | String | The string name of a method of <code>module</code>. 
-     *  | funArgs | Array | An array of arguments to pass to <code>module[funName]</code> when the latter is called. 
+     *  | funName | String | The string name of a method of &lt;code>module&lt;/code>. 
+     *  | funArgs | Array | An array of arguments to pass to &lt;code>module[funName]&lt;/code> when the latter is called. 
      *
      *  ##### spawn/4
      *  (coming soon)
      *
      *  @todo implement the 'undefined function' error
      *  @todo refer to 'dynamic module loading' and module objects later 
-     *  @todo When <code>fun</code> returns, Proc should exit formally.
+     *  @todo When &lt;code>fun&lt;/code> returns, Proc should exit formally.
      *  @todo Enforce passing objects by value (copy on call).
      *  
      */
@@ -344,3 +372,26 @@ class Node {
     } // method Node.spawn
 
 } // class Node
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Serl.html">Serl</a></li><li><a href="module-SSON.html">SSON</a></li></ul><h3>Namespaces</h3><ul><li><a href="module-Serl._Node_nodeMap_.html">'Node#nodeMap'</a></li><li><a href="module-Serl._Node_procMap_.html">'Node#procMap'</a></li></ul><h3>Classes</h3><ul><li><a href="module-Serl.Node.html">Node</a></li><li><a href="module-Serl.Pid.html">Pid</a></li><li><a href="module-Serl.Proc.html">Proc</a></li><li><a href="module-Serl.ProcMap.html">ProcMap</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Feb 02 2020 15:05:51 GMT+0800 (Malaysia Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

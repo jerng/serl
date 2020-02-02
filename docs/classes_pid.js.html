@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Class: ProcMap</title>
+    <title>JSDoc: Source: classes/pid.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,141 +17,54 @@
 
 <div id="main">
 
-    <h1 class="page-title">Class: ProcMap</h1>
+    <h1 class="page-title">Source: classes/pid.js</h1>
 
     
 
 
 
-
-<section>
-
-<header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>
-            <span class="ancestors"><a href="module-Serl.html">Serl</a>.</span>ProcMap<span class="signature">()</span><span class="type-signature"></span></h2>
-        
-    
-</header>
-
-<article>
-    <div class="container-overview">
-    
-        
-
-    
-
-    
-    <h4 class="name" id="ProcMap"><span class="type-signature"></span>new ProcMap<span class="signature">()</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="classes_procMap.js.html">classes/procMap.js</a>, <a href="classes_procMap.js.html#line1">line 1</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-    <dt class="tag-todo">To Do:</dt>
-    <dd class="tag-todo">
-        <ul>
-            <li>**DOCUMENTATION**</li>
-        </ul>
-    </dd>
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-    </div>
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</article>
-
-</section>
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>export { Pid }
+
+/**
+ *  @class module:Serl.Pid
+ *  @classdesc
+ *  Constructor for objects analogous to an [OTP Pid term]{@link
+ *  http://erlang.org/doc/reference_manual/data_types.html#pid}.
+ *
+ *  @todo validate argument types in the constructor!
+ *
+ */
+class Pid {
+
+    constructor (nodeIndex, procIndex) {
+        this.nodeIndex  = nodeIndex
+        this.procIndex  = procIndex
+    }
+
+    /**
+     *  @method module:Serl.Pid#toString
+     *  @description Overridden [toString]{@link
+     *  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toString}
+     *  . Output is of the form:
+     *
+     *  ```
+        *  [object Pid&lt;0.1>]
+     *  ```
+     *  @todo should this be made into a static method? (no)
+     *  
+     */
+    toString () {
+        return `[object Pid&lt;${this.nodeIndex}.${this.procIndex}>]`
+    }
+
+} 
+
+</code></pre>
+        </article>
+    </section>
 
 
 
