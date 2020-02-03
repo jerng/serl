@@ -54,12 +54,12 @@ Current configuration of `conf.json`:
     "allowUnknownTags": true
 }
 ```
-`.vimrc` line to auto-regenerate documentation (example):
+`.vimrc` line to auto-regenerate documentation on-save (example):
 ```
 
 autocmd BufWritePost ~/exercises/serl/* !node 
     \ ~/exercises/serl/node_modules/jsdoc/jsdoc.js
-    \ ~/exercises/serl/lib/serl.js
+    \ ~/exercises/serl/lib/ -r
     \ -d ~/exercises/serl/docs
     \ -c ~/exercises/serl/node_modules/jsdoc/conf.json
     \ -R ~/exercises/serl/README.md
@@ -119,7 +119,32 @@ Get on [JSDoc Slack](https://jsdoc-slack.appspot.com/).
 
 I didn't want to do this. I wanted something like
 [this](https://github.com/jerng/justjsf#versions-current-branch), but hit a
-dead-end, and fell back to the approach on this repository.
+dead-end, and fell back to the approach on this repository. The current approach
+is arguable more conservative, as we simply adopt Erlang/OTP architecture, and
+don't dwell too much on deviating from it - thus we aim to obtain all the
+pertinent benefits and opportunity costs (if you are not sure what these are,
+you may want to read about how Erlang/OTP is designed, and what it is designed
+to do.
+
+Having set ourselves in that direction, here are some opportunities to look
+forward to:
+
+- JavaScript applications can be written, which run agnostic to whether their
+  environment is 
+  
+  - 'on 'a server', 
+  
+  - 'in the browser',
+  
+  - 'by a function-as-a-service' such as AWS Lambda.
+
+- Such applications may be cross-environment, being composed of various nodes
+  on different environments, and these nodes would communicate with each other
+  using the same protocol.
+
+- Beyond JavaScript, if we manage through time to stick very closely to
+  Erlang/OTP semantics, we may even look forward to interfacing with Erlang/OTP
+  nodes directly from JavaScript/OTP nodes.
 
 # Backlog
 
