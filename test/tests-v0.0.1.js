@@ -1,155 +1,213 @@
 import * as Serl from '../lib/serl.js'
 
-console.log ( `[TEST #1 : does the Node class / function / object exist?` )
-try { console.log ( `OK: CODE [[new Serl.Node instanceof Serl.Node]] RETURNED
-    [[${new Serl.Node instanceof Serl.Node}]]` ) } 
-catch (e) { console.error(e) } 
-finally {console.log('] - - ')}
+class Exam {
 
-console.log ( `[TEST #1.1 : do Node instances have names ?` )
-try { console.log ( `OK: CODE [[(new Serl.Node('tom')).name]] RETURNED [[${(new
-    Serl.Node('tom')).name}]]` ) } 
-catch (e) { console.error(e) } 
-finally {console.log('] - - ')}
+    constructor ( data ) {
+        
+        let passCount   = 0
+        let warnCount   = 0
 
-console.log ( `[TEST #1.2 : does static method Pid.nodeIndexFromNodeName()
-    work?` ); try { console.log ( `OK: CODE [[  
+        console.log (
+`
+**
+*   (new Exam)!
+*   Number of tests : ${data.tests.length}
+*   ... commencing...
+**`)
+        for ( const i in data.tests ) {
+
+            let testCount = parseInt(i) + 1
+            let returned
+            
+            if ( data.tests[i].warning ) {
+                console.error(
+`
+**
+*   Warning : ${ data.tests[i].warning }
+**`)
+                warnCount ++
+                continue // break
+            }
+
+            if ( data.tests[i].expectError ) {
+
+                ERROR_EXPECTED: 
+                {
+                    let errorThrown     = false
+                    try {
+
+                        returned        = data.tests[i].code()
+
+                    } catch (e) {
+
+                        errorThrown     = true 
+
+                        console.log(
+`
+*   Test    : #${ testCount } passed (caught an Error)
+*   Caught  : ${ e }
+*   Returned: ${ returned }
+*   Concern : ${ data.tests[i].concern }
+**
+Code    : ${ data.tests[i].code.toString() }
+`) 
+                        passCount ++ 
+
+                    } finally {
+                        
+                        if ( ! errorThrown ) {
+                            console.error(
+`
+*   Test    : #${ testCount } failed (caught no Error)
+*   Returned: ${ returned }
+*   Concern : ${ data.tests[i].concern }
+**
+Code    : ${ data.tests[i].code.toString() }
+`) 
+                        } // if
+
+                    } // finally
+
+                } // ERROR_EXPECTED:
+
+            } else { // !data.tests[i].expectError
+
+                try {   
+                        returned = data.tests[i].code()  
+                        console.log(
+`
+*   Test    : #${ testCount } passed
+*   Returned: ${ returned }
+*   Concern : ${ data.tests[i].concern }
+**
+    Code    : ${ data.tests[i].code.toString() }
+`) 
+                        passCount ++
+
+                } catch (e) {   
+                    
+                    console.error( 
+`
+*   Test    : #${ testCount } failed
+*   Concern : ${ data.tests[i].concern }
+*   Message : ${ e }
+**
+    Code    : ${ data.tests[i].code.toString() }
+`) 
+                } // catch
+
+            } // if-else ( data.tests[i].expectError )
+
+        } // for ( const i in data.tests ) 
+
+        let testCount = data.tests.length - warnCount
+
+        console.log (
+`
+**
+*   ... (new Exam) constructed.
+*   Number of tests             : ${testCount}
+*   Number of tests passed      : ${passCount}
+*   Number of tests failed -----: ${testCount - passCount}
+*   Number of warnings logged   : ${warnCount}
+*   
+*   No further results.
+**`)
+
+    } // constructor()   
+
+} // class Exam
+
+new Exam ( {
+    tests : [
+{   concern : '1. Does the Node class / function / object exist?',
+    code : function () {
+        return (new Serl.Node instanceof Serl.Node)
+    }
+}, 
+{   concern : '1.1. Do Node instances have names?',
+    code : function () {
+        return (new Serl.Node('tom')).name
+    }
+},
+{   concern : '1.2. Does static method Pid.nodeIndexFromNodeName() work?',
+    code : function () {
         let n = new Serl.Node ('test1.2')
         return Serl.Proc.nodeIndexFromNodeName ( n, n.name )
-    ]] RETURNED [[${(()=>{
-        let n = new Serl.Node ('test1.2')
-        return Serl.Proc.nodeIndexFromNodeName ( n, n.name )
-})() }]]` ) } catch (e) { console.error(e) } finally {console.log('] - - ')}
-
-console.log ( `[TEST #2 : does the Pid class / function / object exist?` )
-try { console.log ( `OK: CODE [[
-        new Serl.Pid (  'placeholderNodeIndex', 
-                        'placeholderProcIndex' ) instanceof Serl.Pid
-    ]] RETURNED [[${
-        new Serl.Pid (  'placeholderNodeIndex', 
-                        'placeholderProcIndex' ) instanceof Serl.Pid
-    }]]` ) } catch (e) { console.error(e) } finally {console.log('] - - ')}
-
-console.log ( `[TEST #2.1 : how readable is the Pid's .toString()?` ); try {
-    console.log ( `OK: CODE [[ 
-        new Serl.Pid ( 'placeholderNodeName', 'placeholderProcIndex' )
-    ]] RETURNED [[${(()=>{
+    }
+},
+{   concern : '2. Does the Pid class / function / object exist?',
+    code : function () {
+        return new Serl.Pid (  'placeholderNodeIndex', 'placeholderProcIndex' ) instanceof Serl.Pid
+    }
+},
+{   concern : '2.1. How readable is the Pid\'s .toString()?',
+    code : function () {
         let n = new Serl.Node ('test2.1')
         return new Serl.Pid ( 'placeholderNodeName', 'placeholderProcIndex' )
-})() }]]` ) } catch (e) { console.error(e) } finally {console.log('] - - ')}
-
-//*
-console.log ( `[TEST #3 : spawn(()=>{})?` )
-try { console.log ( `OK: CODE [[
-        (new Serl.Node).spawn(()=>{})
-    ]] RETURNED [[
-        ${(new Serl.Node).spawn(()=>{})}
-    ]]` ) } 
-catch (e) { console.error(e) } 
-finally {console.log('] - - ')}
-//*/
-
-console.log ( `[TEST #3.1 : spawn(1)?` )
-try { console.error ( `NO ERROR THROWN: CODE [[ 
-        (new Serl.Node).spawn(1)
-    ]] RETURNED [[
-        ${(new Serl.Node).spawn(1)}
-    ]]` ) } 
-catch (e) { console.log(`OK: CODE [[
-        (new Serl.Node).spawn(1)
-    ]] RETURNED [[
-        ${( e instanceof Error) 
-                ? e 
-                : new Error('Expected an error, did not obtain one.')}
-    ]]`) } 
-finally {console.log('] - - ')}
-
-//*
-console.log ( `[TEST #3.2 : do successive calls to spawn() increment the Proc
-Pids in the Node's procMap?` ); try { console.log ( `OK: CODE [[  
-        let n = new Serl.Node ('test3.2')
-        return [n.spawn(()=>{}), n.spawn(()=>{})]
-    ]] RETURNED [[${(()=>{
+    }
+},
+{   concern : '3. spawn(()=>{})?',
+    code : function () {
+        return (new Serl.Node).spawn(()=>{})
+    }
+},
+{   concern : '3.1. Will spawn(1) throw an error?',
+    expectError : true,
+    code : function () {
+        return (new Serl.Node).spawn(1)
+    }
+},
+{   concern : `
+    3.2. Do successive calls to spawn() increment the Proc Pids in the Node's
+    procMap?`,
+    code : function () {
         let n = new Serl.Node('test3.2')
         return [n.spawn(()=>{}), n.spawn(()=>{})]
-})() }]]` ) } catch (e) { console.error(e) } finally {console.log('] - - ')}
-
-console.error ( `[TEST #3.n : tests for arities != 1, unwritten at this time; NO DISTRIBUTED COMPUTING.]` )
-//*/
-
-//*
-console.log ( `[TEST #3.3 : process is spawned, then what?` ); 
-try { console.log ( `OK: CODE [[  
-        let n = new Serl.Node ('test3.3')
-        let p = n.spawn( ()=>{console.log(\`NEWS: spawn/1 was called on a function body
-        containing this line\`)} )
-        return p
-    ]] RETURNED [[${(()=>{
+    }
+},
+{   warning : '[TEST #3.n : tests for arities != 1, unwritten at this time; NO DISTRIBUTED COMPUTING.]',
+},
+{   concern : `3.3. Process is spawned, then what?`,
+    code : function () {
         let n = new Serl.Node ('test3.3')
         let p = n.spawn( ()=>{console.log(`NEWS: spawn/1 was called on a function body
         containing this line`)} )
         return p
-})() }]]` ) } catch (e) { console.error(e) } finally {console.log('] - - ')}
-//*/
+    }
+},
 
-console.log ( `[TEST #4 : Node's procMap is readable ?` )
-try { console.log ( `OK: CODE [[ (new Serl.Node).procMap.counter ]] RETURNED
-    [[${ (new Serl.Node).procMap.counter }]]` ) } 
-catch (e) { console.error(e) } 
-finally {console.log('] - - ')}
+{   concern : `4. Node's procMap is readable ?`,
+    code : function () {
+        (new Serl.Node).procMap.counter
+    }
+},
 
-console.log ( `[TEST #4.1 : Node's procMap is writable ?` )
-try { console.log ( `OK: CODE [[  
+{   concern : `4.1. Node's procMap is writable ?`,
+    code : function () {
         let n = (new Serl.Node)
         n.procMap.counter += 1
         return n.procMap.counter
-    ]] RETURNED [[${(()=>{
-        let n = (new Serl.Node)
-        n.procMap.counter += 1
-        return n.procMap.counter
-    })() }]]` ) } 
-catch (e) { console.error(e) } 
-finally {console.log('] - - ')}
-
-console.log ( `[TEST #5 : does the Proc class / function / object exist?` )
-try { console.log ( `OK: CODE [[
+    }
+},
+{   concern : `5 : does the Proc class / function / object exist?`,
+    code : function () {
         new Serl.Proc ( 'placeholderNodeName', 
                         'placeholderProcIndex', 
                         new Serl.Node ('test5') ) instanceof Serl.Proc
-    ]] RETURNED [[${
-        new Serl.Proc ( 'placeholderNodeName', 
-                        'placeholderProcIndex', 
-                        new Serl.Node ('test5') ) instanceof Serl.Proc
-    }]]` ) } 
-catch (e) { console.error(e) } 
-finally {console.log('] - - ')}
-
-console.log ( `[TEST #5.1 : how readable is the Proc's .toString()?` ); try { console.log ( `OK: CODE [[  
+    }
+},
+{   concern : `5.1 : how readable is the Proc's .toString()?`,
+    code : function () {
         let n = new Serl.Node ('test5')
         return new Serl.Proc ( n.name, 'placeholderProcIndex', n ) 
-    ]] RETURNED [[${(()=>{
-        let n = new Serl.Node ('test5')
-        return new Serl.Proc ( n.name, 'placeholderProcIndex', n ) 
-})() }]]` ) } catch (e) { console.error(e) } finally {console.log('] - - ')}
-
-console.error ( `[TEST #6 : what happens to procMap and its counter when processes are removed? What happens when processes are stopped?]` )
-
-//*
-console.log ( `[TEST #3.4 : how do processes receive messages?`)
-console.error (`3.4: break this up into a series of small tests`)
-    //  Code it here, then move it to serl.js
-    //
-    //  If fun doesn't call Serl.Proc.receive(), then fun doesn't wait, and runs till
-    //  completion.
-    //  If fun DOES call Serl.Proc.receive(), then fun has to AWAIT its result,
-    //  which must be a Promise
-
-try { console.log ( `OK: CODE [[  
-
-    (sorry, for now: it's pretty long, so best you look in the source)
-
-    ]] RETURNED [[${(()=>{
-
+    }
+},
+{   warning : `[TEST #6 : what happens to procMap and its counter when processes are removed? What happens when processes are stopped?]`,
+},
+{   concern : `3.4 : how do processes receive messages?`,
+    code : function () {
+    
     //  INIIALISATION of F1
 
         let n   =   new Serl.Node ('test3.4')
@@ -228,22 +286,34 @@ try { console.log ( `OK: CODE [[
             // User should never send messages like this.
         console.log (proc.mailbox)
 
-})() }]]` ) } catch (e) { console.error(e) } finally {console.log('] - - ')}
-
-console.error ( `[TEST #7 : process link interaction, unimplemented`)
-console.error ( `[TEST #8 : process exit signals interaction, unimplemented`)
-console.error ( `[TEST #9 : process monitoring interaction, unimplemented`)
-
-console.error ( `[TEST #3.4: should be made async, so that it finishes before
-#3.5 begins.]` )
-//*/
-
-//*
-console.log ( `[TEST #3.5 : how do processes send messages? (includes 15k
-message test site) (f1a,b,c,d,e, are mutually exclusive options for testing; you
-want to read the code... f1e is the most sophisticated option`); try { console.log ( `OK: CODE [[  
-
-    ]] RETURNED [[${(()=>{
+    }
+},
+{   warning : `
+3.4: break this up into a series of small tests
+    //  Code it here, then move it to serl.js
+    //
+    //  If fun doesn't call Serl.Proc.receive(), then fun doesn't wait, and runs till
+    //  completion.
+    //  If fun DOES call Serl.Proc.receive(), then fun has to AWAIT its result,
+    //  which must be a Promise
+`,
+},
+{	warning: `[TEST #7 : process link interaction, unimplemented`
+},
+{	warning: `[TEST #8 : process exit signals interaction, unimplemented`
+},
+{	warning: `[TEST #9 : process monitoring interaction, unimplemented`
+},
+{	warning: `[TEST #3.4: should be made async, so that it finishes before #3.5
+begins.]` 
+},
+{   warning : `Async test results follow after the exam report. Test framework
+needs to be modified to prevent this.`,
+},
+{   concern : `3.5 : how do processes send messages? (includes 15k message test
+site) (f1a,b,c,d,e, are mutually exclusive options for testing; you want to read
+the code... f1e is the most sophisticated option`,
+    code : function () {
 
         let n       =   new Serl.Node ('test3.5')
 
@@ -339,8 +409,9 @@ want to read the code... f1e is the most sophisticated option`); try { console.l
             the shim, below.]` )
 
             let counter = 0
-            while ( counter < 1 ) { // shim
-            //while ( counter < 15000 ) { // do your 15k test here
+            while ( counter < 1 ) // shim
+            //while ( counter < 15000 ) // do your 15k test here
+            {
                 counter ++
                 this.send ( recipientPid, 'ohai' + counter )
             }
@@ -369,37 +440,30 @@ want to read the code... f1e is the most sophisticated option`); try { console.l
 
         return 'placeholder'
 
-})() }]]` ) } catch (e) { console.error(e) } finally {console.log('] - - ')}
-console.error (`WARNING: 3.5, here f1bNamed makes a tail-call to itself, but it is
-not clear that this will not blow the call-stack; see note at f1bNamed; check`)
+    }
+},
+{   warning : `WARNING: 3.5, here f1bNamed makes a tail-call to itself, but it
+is not clear that this will not blow the call-stack; see note at f1bNamed;
+check`,
+},
 
-//*/
 
 
-/* template test (NO-expected-error):
+/* Templates: 
 
-console.log ( `[TEST # : ?` ); try { console.log ( `OK: CODE [[  
+{   concern : ``,
+    code : function () {
+    }
+},
 
-    ]] RETURNED [[${(()=>{
+{   concern : ``,
+    expectError : true,
+    code : function () {
+    }
+},
 
-        return x
-})() }]]` ) } catch (e) { console.error(e) } finally {console.log('] - - ')}
-
+{   warning : ``,
+},
 */
-/* template test (expected-error):
-
-console.log ( `[TEST # : ?` ) try { console.error ( `NO ERROR THROWN: CODE [[ 
-
-    ]] RETURNED [[
-
-    ]]` ) } catch (e) { console.log(`OK: CODE [[
-
-    ]] RETURNED [[ ${( e instanceof Error) ? e : new Error ('Expected an error,
-did not obtain one.')} ]]`) } finally {console.log('] - - ')}
-
-*/
-/* templace test (simply undone feature):
-
-console.error ( `[TEST # : .]` )
-
-*/
+    ]
+} )
