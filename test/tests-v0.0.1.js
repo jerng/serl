@@ -3,7 +3,8 @@ import * as Serl from '../lib/serl.js'
 class Exam {
 
     constructor ( data ) {
-        
+       
+        let testCount   = 0
         let passCount   = 0
         let warnCount   = 0
 
@@ -11,96 +12,122 @@ class Exam {
 `
 **
 *   (new Exam)!
-*   Number of tests : ${data.tests.length}
+*   Number of concerns : ${data.concerns.length}
 *   ... commencing...
 **`)
-        for ( const i in data.tests ) {
 
-            let testCount = parseInt(i) + 1
-            let returned
+        console.groupCollapsed ( 'Concerns (toggle expansion)' )
+
+        for ( const i in data.concerns ) {
             
-            if ( data.tests[i].warning ) {
-                console.error(
-`
-**
-*   Warning : ${ data.tests[i].warning }
-**`)
-                warnCount ++
-                continue // break
-            }
+            if ( data.concerns[i].warning ) {
 
-            if ( data.tests[i].expectError ) {
+                A_WARNING_NOT_A_TEST:
+                {
+                    warnCount ++
 
-                ERROR_EXPECTED: 
+                    console.group   ( `Warning: #${ warnCount }` )
+                    console.warn    ( data.concerns[i].warning )
+                    console.groupEnd()
+
+                    continue 
+                }
+
+            } 
+            
+            // If Concern is not a Warning, then it must be a Test.
+
+            testCount ++
+            let returned
+
+            if ( data.concerns[i].expectError ) {
+
+                TEST_AND_ERROR_EXPECTED: 
                 {
                     let errorThrown     = false
+
                     try {
 
-                        returned        = data.tests[i].code()
+                        returned        = data.concerns[i].code()
 
                     } catch (e) {
 
                         errorThrown     = true 
-
-                        console.log(
-`
-*   Test    : #${ testCount } passed (caught an Error)
-*   Caught  : ${ e }
-*   Returned: ${ returned }
-*   Concern : ${ data.tests[i].concern }
-**
-Code    : ${ data.tests[i].code.toString() }
-`) 
                         passCount ++ 
+
+                        console.groupCollapsed  ( `Test: #${ testCount } passed (caught an Error) - ${ data.concerns[i].test }` )
+                        console.log             (
+`*   Caught  : ${ e }
+*   Returned: ${ returned }`) 
+                        {   console.groupCollapsed  ( `Code:` )
+                            console.log             ( data.concerns[i].code.toString() )
+                            console.groupEnd        ()
+                        }
+                        console.groupEnd        ()
 
                     } finally {
                         
                         if ( ! errorThrown ) {
-                            console.error(
-`
-*   Test    : #${ testCount } failed (caught no Error)
-*   Returned: ${ returned }
-*   Concern : ${ data.tests[i].concern }
-**
-Code    : ${ data.tests[i].code.toString() }
-`) 
-                        } // if
+                            
+                            console.group   ( `Test: #${ testCount } failed (caught no Error) - ${ data.concerns[i].test }` )
+                            console.error   (
+`*   Returned: ${ returned }`) 
+                            {   console.group   ( `Code:` )
+                                console.error   ( data.concerns[i].code.toString() )
+                                console.groupEnd()
+                            }
+                            console.groupEnd()
+
+                        } // if ( ! errorThrown)
 
                     } // finally
+                    
+                    continue
 
-                } // ERROR_EXPECTED:
+                } // TEST_AND_ERROR_EXPECTED
 
-            } else { // !data.tests[i].expectError
+            } // if ( data.concerns[i].expectError )
 
+
+            TEST_AND_ERROR_NOT_EXPECTED:
+            {
                 try {   
-                        returned = data.tests[i].code()  
-                        console.log(
-`
-*   Test    : #${ testCount } passed
-*   Returned: ${ returned }
-*   Concern : ${ data.tests[i].concern }
-**
-    Code    : ${ data.tests[i].code.toString() }
-`) 
+                        returned = data.concerns[i].code()  
+                        if ( returned != data.concerns[i].want ) {
+                            throw   'want' in data.concerns[i]
+                                    ? `We wanted the code to return : ${data.concerns[i].want}`
+                                    : `Writers of this test did not specify what they wanted.`
+                        }
                         passCount ++
 
+                        console.groupCollapsed  ( `Test: #${ testCount } passed - ${ data.concerns[i].test }` )
+                        console.log             ( 
+`*   Returned: ${ returned }`) 
+                        {   console.groupCollapsed  ( `Code:` )
+                            console.log             ( data.concerns[i].code.toString() )
+                            console.groupEnd        ()
+                        }
+                        console.groupEnd        ()
+
                 } catch (e) {   
-                    
-                    console.error( 
-`
-*   Test    : #${ testCount } failed
-*   Concern : ${ data.tests[i].concern }
-*   Message : ${ e }
-**
-    Code    : ${ data.tests[i].code.toString() }
-`) 
+                   
+                    console.group   ( `Test: #${ testCount } failed - ${ data.concerns[i].test }` )
+                    console.error   ( 
+`*   Returned: ${ returned }
+*   Message : ${ e }`) 
+                    {   console.group   ( `Code:` )
+                        console.error   ( data.concerns[i].code.toString() )
+                        console.groupEnd()
+                    }
+                    console.groupEnd()
+
                 } // catch
 
-            } // if-else ( data.tests[i].expectError )
+            } // TEST_AND_ERROR_NOT_EXPECTED
 
-        } // for ( const i in data.tests ) 
+        } // for ( const i in data.concerns ) 
 
-        let testCount = data.tests.length - warnCount
+        console.groupEnd ( 'Concerns (toggle expansion)' )
 
         console.log (
 `
@@ -119,46 +146,48 @@ Code    : ${ data.tests[i].code.toString() }
 } // class Exam
 
 new Exam ( {
-    tests : [
-{   concern : '1. Does the Node class / function / object exist?',
+    concerns : [
+{   test : '1. Does the Node class / function / object exist?',
     code : function () {
         return (new Serl.Node instanceof Serl.Node)
-    }
+    },
+    want : true
 }, 
-{   concern : '1.1. Do Node instances have names?',
+{   test : '1.1. Do Node instances have names?',
     code : function () {
         return (new Serl.Node('tom')).name
-    }
+    },
+    want : undefined
 },
-{   concern : '1.2. Does static method Pid.nodeIndexFromNodeName() work?',
+{   test : '1.2. Does static method Pid.nodeIndexFromNodeName() work?',
     code : function () {
         let n = new Serl.Node ('test1.2')
         return Serl.Proc.nodeIndexFromNodeName ( n, n.name )
     }
 },
-{   concern : '2. Does the Pid class / function / object exist?',
+{   test : '2. Does the Pid class / function / object exist?',
     code : function () {
         return new Serl.Pid (  'placeholderNodeIndex', 'placeholderProcIndex' ) instanceof Serl.Pid
     }
 },
-{   concern : '2.1. How readable is the Pid\'s .toString()?',
+{   test : '2.1. How readable is the Pid\'s .toString()?',
     code : function () {
         let n = new Serl.Node ('test2.1')
         return new Serl.Pid ( 'placeholderNodeName', 'placeholderProcIndex' )
     }
 },
-{   concern : '3. spawn(()=>{})?',
+{   test : '3. spawn(()=>{})?',
     code : function () {
         return (new Serl.Node).spawn(()=>{})
     }
 },
-{   concern : '3.1. Will spawn(1) throw an error?',
+{   test : '3.1. Will spawn(1) throw an error?',
     expectError : true,
     code : function () {
         return (new Serl.Node).spawn(1)
     }
 },
-{   concern : `
+{   test : `
     3.2. Do successive calls to spawn() increment the Proc Pids in the Node's
     procMap?`,
     code : function () {
@@ -168,7 +197,7 @@ new Exam ( {
 },
 {   warning : '[TEST #3.n : tests for arities != 1, unwritten at this time; NO DISTRIBUTED COMPUTING.]',
 },
-{   concern : `3.3. Process is spawned, then what?`,
+{   test : `3.3. Process is spawned, then what?`,
     code : function () {
         let n = new Serl.Node ('test3.3')
         let p = n.spawn( ()=>{console.log(`NEWS: spawn/1 was called on a function body
@@ -177,27 +206,27 @@ new Exam ( {
     }
 },
 
-{   concern : `4. Node's procMap is readable ?`,
+{   test : `4. Node's procMap is readable ?`,
     code : function () {
         (new Serl.Node).procMap.counter
     }
 },
 
-{   concern : `4.1. Node's procMap is writable ?`,
+{   test : `4.1. Node's procMap is writable ?`,
     code : function () {
         let n = (new Serl.Node)
         n.procMap.counter += 1
         return n.procMap.counter
     }
 },
-{   concern : `5 : does the Proc class / function / object exist?`,
+{   test : `5 : does the Proc class / function / object exist?`,
     code : function () {
         new Serl.Proc ( 'placeholderNodeName', 
                         'placeholderProcIndex', 
                         new Serl.Node ('test5') ) instanceof Serl.Proc
     }
 },
-{   concern : `5.1 : how readable is the Proc's .toString()?`,
+{   test : `5.1 : how readable is the Proc's .toString()?`,
     code : function () {
         let n = new Serl.Node ('test5')
         return new Serl.Proc ( n.name, 'placeholderProcIndex', n ) 
@@ -205,7 +234,7 @@ new Exam ( {
 },
 {   warning : `[TEST #6 : what happens to procMap and its counter when processes are removed? What happens when processes are stopped?]`,
 },
-{   concern : `3.4 : how do processes receive messages?`,
+{   test : `3.4 : how do processes receive messages?`,
     code : function () {
     
     //  INIIALISATION of F1
@@ -310,7 +339,7 @@ begins.]`
 {   warning : `Async test results follow after the exam report. Test framework
 needs to be modified to prevent this.`,
 },
-{   concern : `3.5 : how do processes send messages? (includes 15k message test
+{   test : `3.5 : how do processes send messages? (includes 15k message test
 site) (f1a,b,c,d,e, are mutually exclusive options for testing; you want to read
 the code... f1e is the most sophisticated option`,
     code : function () {
@@ -405,9 +434,6 @@ the code... f1e is the most sophisticated option`,
             this.send ( recipientPid, 'ohai' )
             this.send ( recipientPid, 'ohai again' )
 
-            console.error ( `[TEST (above) : do your 15k test by uncommenting
-            the shim, below.]` )
-
             let counter = 0
             while ( counter < 1 ) // shim
             //while ( counter < 15000 ) // do your 15k test here
@@ -442,7 +468,9 @@ the code... f1e is the most sophisticated option`,
 
     }
 },
-{   warning : `WARNING: 3.5, here f1bNamed makes a tail-call to itself, but it
+{   warning : `3.4. Do your 15k test by uncommenting the relevant shim.`,
+},
+{   warning : `3.5, here f1bNamed makes a tail-call to itself, but it
 is not clear that this will not blow the call-stack; see note at f1bNamed;
 check`,
 },
@@ -451,12 +479,12 @@ check`,
 
 /* Templates: 
 
-{   concern : ``,
+{   test : ``,
     code : function () {
     }
 },
 
-{   concern : ``,
+{   test : ``,
     expectError : true,
     code : function () {
     }
