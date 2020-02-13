@@ -16,7 +16,7 @@ class Exam {
 *   ... commencing...
 **`)
 
-        console.groupCollapsed ( 'Concerns (toggle expansion)' )
+        console.group/*Collapsed*/ ( 'Concerns (toggle expansion)' )
 
         for ( const i in data.concerns ) {
             
@@ -42,7 +42,7 @@ class Exam {
 
             if ( data.concerns[i].expectError ) {
 
-                TEST_AND_ERROR_EXPECTED: 
+                TEST_WHERE_ERROR_EXPECTED: 
                 {
                     let errorThrown     = false
 
@@ -84,20 +84,67 @@ class Exam {
                     
                     continue
 
-                } // TEST_AND_ERROR_EXPECTED
+                } // TEST_WHERE_ERROR_EXPECTED
 
             } // if ( data.concerns[i].expectError )
 
 
-            TEST_AND_ERROR_NOT_EXPECTED:
+            TEST_WHERE_ERROR_NOT_EXPECTED:
             {
                 try {   
                         returned = data.concerns[i].code()  
-                        if ( returned != data.concerns[i].want ) {
-                            throw   'want' in data.concerns[i]
-                                    ? `We wanted the code to return : ${data.concerns[i].want}`
-                                    : `Writers of this test did not specify what they wanted.`
+
+                        if ( ! 'want' in data.concerns[i] ) {
+                            throw `Writers of this test did not specify what they wanted.`
                         }
+                        
+                        // Validation function IS expected:
+
+                        else if (   typeof data.concerns[i].want        == 'string' 
+                                &&  data.concerns[i].want.toLowerCase() == 'vfun' ) {
+
+                            if ( ! 'vfun' in data.concerns[i] ) {
+                                throw `Writers of this test did not specify the validation function.`
+                            }
+
+                            // Asynchronous test result handler:
+                            /*
+                            if ( returned instanceof Promise ) {
+                            
+                                let asyncTestHandler = async () => {
+                                    let testFulfillmentValue = await returned
+                                }
+
+                                //let onFulfilled = ( value ) => {
+                                    
+                                //}
+                                //prom.then ( onFulfilled, onRejected)
+                            }
+                            */
+
+                            // Synchronous test result handler:
+                            if ( data.concerns[i].vfun ( returned ) != true ) {
+                                throw   `We wanted the code to return a value, RV, where VFUN(RV) returns (true), given a validation function, VFUN, whose body is : 
+
+${ data.concerns[i].vfun.toString() }`
+                            }
+
+                        } 
+                        
+                        // Validation function NOT expected:
+
+                            // Asynchronous test result handler: needs to go
+                            // here. FIXME
+
+                        else if ( returned != data.concerns[i].want ) {
+                            
+                            // implied: &&  ( 'want' in data.concern[i] )
+                            // implied: &&  (       typeof data.concern[i].want         != 'string' 
+                            //                  ||  data.concern[i].want.toLowerCase()  != 'vfun' 
+
+                            throw `We wanted the code to return : ${data.concerns[i].want}`
+                        }
+
                         passCount ++
 
                         console.groupCollapsed  ( `Test: #${ testCount } passed - ${ data.concerns[i].test }` )
@@ -123,7 +170,7 @@ class Exam {
 
                 } // catch
 
-            } // TEST_AND_ERROR_NOT_EXPECTED
+            } // TEST_WHERE_ERROR_NOT_EXPECTED
 
         } // for ( const i in data.concerns ) 
 
@@ -157,29 +204,38 @@ new Exam ( {
     code : function () {
         return (new Serl.Node('tom')).name
     },
-    want : undefined
+    want : 'vfun', 
+    vfun : (returned) => returned.includes('tom')
 },
 {   test : '1.2. Does static method Pid.nodeIndexFromNodeName() work?',
     code : function () {
         let n = new Serl.Node ('test1.2')
         return Serl.Proc.nodeIndexFromNodeName ( n, n.name )
-    }
+    },
+    want : 'VFUN',
+    vfun : (returned) => Number.isInteger(returned) 
 },
 {   test : '2. Does the Pid class / function / object exist?',
     code : function () {
-        return new Serl.Pid (  'placeholderNodeIndex', 'placeholderProcIndex' ) instanceof Serl.Pid
-    }
+        return new Serl.Pid (  'placeholderNodeIndex', 'placeholderProcIndex' ) 
+    },
+    want : 'vfun',
+    vfun : (returned) => returned instanceof Serl.Pid 
 },
-{   test : '2.1. How readable is the Pid\'s .toString()?',
+{   test : '2.1. Is the Pid\'s .toString() readable?',
     code : function () {
         let n = new Serl.Node ('test2.1')
-        return new Serl.Pid ( 'placeholderNodeName', 'placeholderProcIndex' )
-    }
+        return new Serl.Pid ( 'readableNodeName', 'readableProcIndex' )
+    },
+    want : 'vfun',
+    vfun : (r) => r.toString().includes('readable')
 },
-{   test : '3. spawn(()=>{})?',
+{   test : '3. Will spawn()-ing an empty function return a Pid object ?',
     code : function () {
         return (new Serl.Node).spawn(()=>{})
-    }
+    }, 
+    want : 'vfun',
+    vfun : (r) => r instanceof Serl.Pid
 },
 {   test : '3.1. Will spawn(1) throw an error?',
     expectError : true,
@@ -188,22 +244,35 @@ new Exam ( {
     }
 },
 {   test : `
-    3.2. Do successive calls to spawn() increment the Proc Pids in the Node's
-    procMap?`,
+    3.2. Do successive calls to spawn() increment the Proc Pids in the Node's procMap?`,
     code : function () {
         let n = new Serl.Node('test3.2')
         return [n.spawn(()=>{}), n.spawn(()=>{})]
-    }
+    },
+    want : 'vfun',
+    vfun : r => r[0] < r[1]
 },
 {   warning : '[TEST #3.n : tests for arities != 1, unwritten at this time; NO DISTRIBUTED COMPUTING.]',
 },
 {   test : `3.3. Process is spawned, then what?`,
     code : function () {
-        let n = new Serl.Node ('test3.3')
-        let p = n.spawn( ()=>{console.log(`NEWS: spawn/1 was called on a function body
-        containing this line`)} )
-        return p
-    }
+
+        let exec = ( fulfill /*, reject*/ ) => {
+
+            /*
+            let n = new Serl.Node ('test3.3')
+            let p = n.spawn( ()=>{
+
+                console.log(`NEWS: test 3.3., spawn/1 was called on a function body containing this line`)
+                
+                fulfill ('test3.3. promise fulfillment value')
+            } )
+            */
+            fulfill ('fulfillment value')
+        }
+        return new Promise ( exec ) 
+    },
+    want : true,
 },
 
 {   test : `4. Node's procMap is readable ?`,
