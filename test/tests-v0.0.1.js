@@ -42,7 +42,7 @@ class Exam {
 
             if ( data.concerns[i].expectError ) {
 
-                TEST_AND_ERROR_EXPECTED: 
+                TEST_WHERE_ERROR_EXPECTED: 
                 {
                     let errorThrown     = false
 
@@ -84,20 +84,44 @@ class Exam {
                     
                     continue
 
-                } // TEST_AND_ERROR_EXPECTED
+                } // TEST_WHERE_ERROR_EXPECTED
 
             } // if ( data.concerns[i].expectError )
 
 
-            TEST_AND_ERROR_NOT_EXPECTED:
+            TEST_WHERE_ERROR_NOT_EXPECTED:
             {
                 try {   
                         returned = data.concerns[i].code()  
-                        if ( returned != data.concerns[i].want ) {
-                            throw   'want' in data.concerns[i]
-                                    ? `We wanted the code to return : ${data.concerns[i].want}`
-                                    : `Writers of this test did not specify what they wanted.`
+
+                        if ( ! 'want' in data.concerns[i] ) {
+                            throw `Writers of this test did not specify what they wanted.`
                         }
+                        
+                        else if (   typeof data.concerns[i].want        == 'string' 
+                                &&  data.concerns[i].want.toLowerCase() == 'vfun' ) {
+
+                            if ( ! 'vfun' in data.concerns[i] ) {
+                                throw `Writers of this test did not specify the validation function.`
+                            }
+
+                            if ( data.concerns[i].vfun ( returned) != true ) {
+                                throw   `We wanted the code to return a value, RV, where VFUN(RV) returns (true), given a validation function, VFUN, whose body is : 
+
+${ data.concerns[i].vfun.toString() }`
+                            }
+
+                        } 
+                        
+                        else if ( returned != data.concerns[i].want ) {
+                            
+                            // implied: &&  ( 'want' in data.concern[i] )
+                            // implied: &&  (       typeof data.concern[i].want         != 'string' 
+                            //                  ||  data.concern[i].want.toLowerCase()  != 'vfun' 
+
+                            throw `We wanted the code to return : ${data.concerns[i].want}`
+                        }
+
                         passCount ++
 
                         console.groupCollapsed  ( `Test: #${ testCount } passed - ${ data.concerns[i].test }` )
@@ -123,7 +147,7 @@ class Exam {
 
                 } // catch
 
-            } // TEST_AND_ERROR_NOT_EXPECTED
+            } // TEST_WHERE_ERROR_NOT_EXPECTED
 
         } // for ( const i in data.concerns ) 
 
@@ -163,7 +187,9 @@ new Exam ( {
     code : function () {
         let n = new Serl.Node ('test1.2')
         return Serl.Proc.nodeIndexFromNodeName ( n, n.name )
-    }
+    },
+    want : 'VFUN',
+    vfun : () => {}
 },
 {   test : '2. Does the Pid class / function / object exist?',
     code : function () {
