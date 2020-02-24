@@ -135,7 +135,9 @@ ${ data.concerns[i].vfun.toString() }`
 
                             // Asynchronous test result handler: needs to go
                             // here. FIXME
-
+                        else if ( returned instanceof Promise) {
+                            throw 'continue work here'
+                        }
                         else if ( returned != data.concerns[i].want ) {
                             
                             // implied: &&  ( 'want' in data.concern[i] )
