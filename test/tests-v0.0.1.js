@@ -23,22 +23,71 @@ class Exam {
             let render
             let concernExecutor = ( fulfill, reject ) => {
 
-                A_WARNING_NOT_A_TEST: 
-                { 
-                    if ( data.concerns[i].warning ) {
+/** LOGIC MAP
+ *
+ *          IF the Concern is a Warning, then RETURN. 
+ *
+ *  (> Hereon, the Concern is implicitly a Test.)
+ *          
+ *          IF the Test Expects-an-error, then THROW failure or RETURN success.
+ *
+ *              Synchronous     : OK
+ *
+ *              Asynchronous    : Not Supported <-FIXME--------------------------- FIXME
+ *
+ *  (> Hereon, the Test implicitly Expects-NO-error.)
+ *
+ *          IF the Test's Want is not defined, then THROW.
+ *
+ *          ELSE if the Test's Want is 'vfun', then
+ *
+ *                  IF 'vfun' is missing, then THROW.
+ *        
+ *                  ELSE if the Test returned a Promise, then THROW failure or RETURN success.
+ *
+ *                      Asynchronous    : OK
+ *        
+ *      (> Hereon, the Test implicitly is synchronous.)
+ *        
+ *                  ELSE if the Test's 'vfun' returns anything but TRUE, then THROW.
+ *
+ *                      Synchronous : OK
+ *
+ *  (> Hereon, the Test implicitly demands only the Wanted value.)
+ *
+ *          ELSE if the Test returned a Promise, then THROW failure or RETURN success.
+ *
+ *              Asynchronous    : OK
+ *  
+ *  (> Hereon, the Test implicitly is synchronous.)
+ *
+ *          ELSE if the Test returned anything but the Wanted value, then THROW.
+ *
+ *              Synchronous : OK
+ *
+ *  (> Hereon, the Test should have RETURNED success, via 'vfun returned TRUE'
+ *  or 'demands only the Wanted value' if it has not, it will now do so.)
+ *
+ *
+ *
+ */
 
-                        warnCount ++
-                        render = () => {
-                            console.group   ( `Warning: #${ warnCount }` )
-                            console.warn    ( data.concerns[i].warning )
-                            console.groupEnd()
-                        }
-                        fulfill ( Object.assign ( data.concerns[i], { render : render } ) )
-                        return // concernExecutor
+A_WARNING_NOT_A_TEST: 
+{ 
+                if ( data.concerns[i].warning ) {
 
-                    } // if 
+                    warnCount ++
+                    render = () => {
+                        console.group   ( `Warning: #${ warnCount }` )
+                        console.warn    ( data.concerns[i].warning )
+                        console.groupEnd()
+                    }
+                    fulfill ( Object.assign ( data.concerns[i], { render : render } ) )
+                    return // concernExecutor
 
-                } // A_WARNING_NOT_A_TEST
+                } // if 
+
+} // A_WARNING_NOT_A_TEST
 
                 // Implicit: if Concern is not a Warning, then it must be a Test.
                 testCount ++
@@ -117,7 +166,7 @@ TEST_WHERE_ERROR_NOT_EXPECTED:
 
 // Explicit: Validation function IS expected:
 // Explicit: Asynchronous test result handler:
-                        if ( returned instanceof Promise ) {
+                        else if ( returned instanceof Promise ) {
                             
                             let onFulfill   = fValue    => {
 
@@ -343,6 +392,7 @@ ${ data.concerns[i].vfun.toString() }
 
 new Exam ( {
     concerns : [
+{   warning : 'TEST FRAMEWORK : Rendering probably needs to happen in a subsequent loop; currently it is done in the main loop, which results in some very bulky, messy code.' },
 {   test : '1. Does the Node class / function / object exist?',
     code : function () {
         return (new Serl.Node instanceof Serl.Node)
