@@ -9,8 +9,7 @@ class Exam {
         let warnCount   = 0
         let concerns    = []
 
-        console.log (
-`
+        console.log ( `
 **
 *   (new Exam)!
 *   Number of concerns : ${data.concerns.length}
@@ -21,60 +20,36 @@ class Exam {
 
         for ( const i in data.concerns ) {
 
-            let exec = ( fulfill, reject ) => {
-                if ( data.concerns[i].warning ) {
+            let render
+            let concernExecutor = ( fulfill, reject ) => {
 
-                    A_WARNING_NOT_A_TEST:
-                    {
+                A_WARNING_NOT_A_TEST: 
+                { 
+                    if ( data.concerns[i].warning ) {
+
                         warnCount ++
+                        render = () => {
+                            console.group   ( `Warning: #${ warnCount }` )
+                            console.warn    ( data.concerns[i].warning )
+                            console.groupEnd()
+                        }
+                        fulfill ( Object.assign ( data.concerns[i], { render : render } ) )
+                        return // concernExecutor
 
-                        fulfill ( Object.assign ( {},
-                            data.concerns[i],
-                            {   render : () => {
-                                    console.group   ( `Warning: #${ warnCount }` )
-                                    console.warn    ( data.concerns[i].warning )
-                                    console.groupEnd()
-                                }
-                            }
-                        ) )
+                    } // if 
 
-                    }
+                } // A_WARNING_NOT_A_TEST
 
-                } 
-                fulfill ( { render : () => { console.log('not a warning') } } )
+                // Implicit: if Concern is not a Warning, then it must be a Test.
+                testCount ++
+                let currentTestCount = parseInt ( testCount)
+                let returned
 
-            } // exec
+TEST_WHERE_ERROR_EXPECTED: 
+{   
+                if ( data.concerns[i].expectError ) {
 
-            let concernPromise = new Promise ( exec )
-            concerns.push ( concernPromise )
-
-/*            
-            if ( data.concerns[i].warning ) {
-
-                A_WARNING_NOT_A_TEST:
-                {
-                    warnCount ++
-
-                    console.group   ( `Warning: #${ warnCount }` )
-                    console.warn    ( data.concerns[i].warning )
-                    console.groupEnd()
-
-                    continue 
-                }
-
-            } 
-            
-            // If Concern is not a Warning, then it must be a Test.
-
-            testCount ++
-            let returned
-
-            if ( data.concerns[i].expectError ) {
-
-                TEST_WHERE_ERROR_EXPECTED: 
-                {
                     let errorThrown     = false
-
                     try {
 
                         returned        = data.concerns[i].code()
@@ -84,130 +59,262 @@ class Exam {
                         errorThrown     = true 
                         passCount ++ 
 
-                        console.groupCollapsed  ( `Test: #${ testCount } passed (caught an Error) - ${ data.concerns[i].test }` )
-                        console.log             (
-`*   Caught  : ${ e }
+                        render = () => {
+                            console.groupCollapsed      ( `Test: #${ currentTestCount } passed (caught an Error) - ${ data.concerns[i].test }` )
+                            console.log                 ( `
+*   Caught  : ${ e }
 *   Returned: ${ returned }`) 
-                        {   console.groupCollapsed  ( `Code:` )
-                            console.log             ( data.concerns[i].code.toString() )
-                            console.groupEnd        ()
+                            {   console.groupCollapsed  ( `Code:` )
+                                console.log             ( data.concerns[i].code.toString() )
+                                console.groupEnd        ()
+                            }
+                            console.groupEnd            ()
                         }
-                        console.groupEnd        ()
+                        fulfill ( Object.assign ( data.concerns[i], { render : render } ) )
+                        return // concernExecutor
 
                     } finally {
                         
                         if ( ! errorThrown ) {
                             
-                            console.group   ( `Test: #${ testCount } failed (caught no Error) - ${ data.concerns[i].test }` )
-                            console.error   (
-`*   Returned: ${ returned }`) 
-                            {   console.group   ( `Code:` )
-                                console.error   ( data.concerns[i].code.toString() )
-                                console.groupEnd()
+                            render = () => {
+                                console.group       ( `Test: #${ currentTestCount } failed (caught no Error) - ${ data.concerns[i].test }` )
+                                console.error       ( `
+*   Returned: ${ returned }`) 
+                                {   console.group   ( `Code:` )
+                                    console.error   ( data.concerns[i].code.toString() )
+                                    console.groupEnd()
+                                }
+                                console.groupEnd    ()
                             }
-                            console.groupEnd()
+                            fulfill ( Object.assign ( data.concerns[i], { render : render } ) )
+                            return // concernExecutor
 
                         } // if ( ! errorThrown)
 
                     } // finally
                     
-                    continue
+                } // if 
 
-                } // TEST_WHERE_ERROR_EXPECTED
+} // TEST_WHERE_ERROR_EXPECTED
 
-            } // if ( data.concerns[i].expectError )
-
-
-            TEST_WHERE_ERROR_NOT_EXPECTED:
-            {
+TEST_WHERE_ERROR_NOT_EXPECTED:
+{
                 try {   
-                        returned = data.concerns[i].code()  
+                    returned = data.concerns[i].code()  
 
-                        if ( ! 'want' in data.concerns[i] ) {
-                            throw `Writers of this test did not specify what they wanted.`
+                    if ( ! ( 'want' in data.concerns[i] ) ) {
+                        throw `Writers of this test did not specify what they wanted.`
+                    }
+                    
+
+                    else if (   typeof data.concerns[i].want        == 'string' 
+                            &&  data.concerns[i].want.toLowerCase() == 'vfun' ) {
+
+                        if ( ! ( 'vfun' in data.concerns[i] ) ) {
+                            throw `Writers of this test did not specify the validation function.`
                         }
-                        
-                        // Validation function IS expected:
 
-                        else if (   typeof data.concerns[i].want        == 'string' 
-                                &&  data.concerns[i].want.toLowerCase() == 'vfun' ) {
-
-                            if ( ! 'vfun' in data.concerns[i] ) {
-                                throw `Writers of this test did not specify the validation function.`
-                            }
-
-                            // Asynchronous test result handler:
-                             // if ( returned instanceof Promise ) {
-                             // 
-                             //     let asyncTestHandler = async () => {
-                             //         let testFulfillmentValue = await returned
-                             //     }
-
-                             //     //let onFulfilled = ( value ) => {
-                             //         
-                             //     //}
-                             //     //prom.then ( onFulfilled, onRejected)
-                             // }
-
-                            // Synchronous test result handler:
-                            if ( data.concerns[i].vfun ( returned ) != true ) {
-                                throw   `We wanted the code to return a value, RV, where VFUN(RV) returns (true), given a validation function, VFUN, whose body is : 
-
-${ data.concerns[i].vfun.toString() }`
-                            }
-
-                        } 
-                        
-                        // Validation function NOT expected:
-
-                            // Asynchronous test result handler: needs to go
-                            // here. FIXME
-                        else if ( returned instanceof Promise) {
-                            let onFulfill   = fValue    => {
-                                console.log ( fValue  )
-                            }
-                            let onReject    = rReason   => {
-                                console.log ( rReason )
-                            }
-                            let t = returned.then ( onFulfill, onReject )
-                            console.log ( t )
-                        }
-                        else if ( returned != data.concerns[i].want ) {
+// Explicit: Validation function IS expected:
+// Explicit: Asynchronous test result handler:
+                        if ( returned instanceof Promise ) {
                             
-                            // implied: &&  ( 'want' in data.concern[i] )
-                            // implied: &&  (       typeof data.concern[i].want         != 'string' 
-                            //                  ||  data.concern[i].want.toLowerCase()  != 'vfun' 
+                            let onFulfill   = fValue    => {
 
-                            throw `We wanted the code to return : ${data.concerns[i].want}`
+                                if ( data.concerns[i].vfun ( fValue ) !== true ) {
+
+                                    throw `
+*   We wanted the code to return a Promise fulfiled with the value, RV, where VFUN(RV) returns (true), given a validation function, VFUN, whose body is : 
+
+${ data.concerns[i].vfun.toString() } 
+
+*
+*   Returned: a Promise
+*       State   : fulfilled
+*       Value   : ${fValue}`
+                                }
+                                
+                                passCount ++
+                                
+                                // This code is redundant with this code
+                                // TAG: EXPECT_NO_ERROR_RENDER_NO_ERROR FIXME 
+                                render = () => {
+                                    console.groupCollapsed      ( `Test: #${ currentTestCount } passed - ${ data.concerns[i].test }` )
+                                    console.log                 ( `
+*   Returned: a Promise
+*       State   : fulfilled
+*       Value   : ${ fValue }`) 
+                                    {   console.groupCollapsed  ( `Code:` )
+                                        console.log             ( data.concerns[i].code.toString() )
+                                        console.groupEnd        ()
+                                    }
+                                    console.groupEnd            ()
+                                }
+                                fulfill ( Object.assign ( data.concerns[i], { render : render } ) )
+                            }
+
+                            let onReject    = rReason   => {
+                                throw `
+*   Returned: a Promise 
+*       State   : rejected
+*       Reason  : ${rReason}`
+                            }
+
+                            let onCatch     = error => {
+                                // This code is redundant with this code
+                                // TAG: EXPECT_NO_ERROR_RENDER_ERROR FIXME 
+                                render = () => {
+                                    console.group       ( `Test: #${ currentTestCount } failed - ${ data.concerns[i].test }` )
+                                    console.error       ( `
+*   Caught  : ${ error }`) 
+                                    {   console.group   ( `Code:` )
+                                        console.error   ( data.concerns[i].code.toString() )
+                                        console.groupEnd()
+                                    }
+                                    console.groupEnd()
+                                }
+                                fulfill ( Object.assign ( data.concerns[i], { render : render } ) )
+                            }                          
+
+                            let asyncTestCode = returned    .then   ( onFulfill, onReject )
+                                                            .catch  ( onCatch )
+                            return // concernExecutor
                         }
 
-                        passCount ++
+// Explicit: Validation function IS expected:
+// Implicit: Synchronous test result handler:
+                        else if ( data.concerns[i].vfun ( returned ) !== true ) {
+                            throw   `
+*   We wanted the code to return a value, RV, where VFUN(RV) returns (true), given a validation function, VFUN, whose body is : 
 
-                        console.groupCollapsed  ( `Test: #${ testCount } passed - ${ data.concerns[i].test }` )
-                        console.log             ( 
-`*   Returned: ${ returned }`) 
+${ data.concerns[i].vfun.toString() }
+
+*
+*   Returned: ${returned}`
+                        }
+
+                    } 
+                    
+// Implicit: Validation function NOT expected:
+// Explicit: Asynchronous test result handler: 
+                    else if ( returned instanceof Promise) {
+
+                        let onFulfill   = fValue    => {
+
+                            if ( fValue !== data.concerns[i].want ) {
+
+                                throw `
+*   We wanted the code to return a Promise fulfiled with the value : ${data.concerns[i].want}
+*
+*   Returned: a Promise
+*       State   : fulfilled
+*       Value   : ${fValue}`
+                            }
+                            
+                            passCount ++
+                            
+                            // This code is redundant with this code
+                            // TAG: EXPECT_NO_ERROR_RENDER_NO_ERROR FIXME 
+                            render = () => {
+                                console.groupCollapsed      ( `Test: #${ currentTestCount } passed - ${ data.concerns[i].test }` )
+                                console.log                 ( `
+*   Returned: a Promise
+*       State   : fulfilled
+*       Value   : ${ fValue }`) 
+                                {   console.groupCollapsed  ( `Code:` )
+                                    console.log             ( data.concerns[i].code.toString() )
+                                    console.groupEnd        ()
+                                }
+                                console.groupEnd            ()
+                            }
+                            fulfill ( Object.assign ( data.concerns[i], { render : render } ) )
+                        }
+
+                        let onReject    = rReason   => {
+                            throw `
+*   Returned: a Promise 
+*       State   : rejected
+*       Reason  : ${rReason}`
+                        }
+
+                        let onCatch     = error => {
+                            // This code is redundant with this code
+                            // TAG: EXPECT_NO_ERROR_RENDER_ERROR FIXME 
+                            render = () => {
+                                console.group       ( `Test: #${ currentTestCount } failed - ${ data.concerns[i].test }` )
+                                console.error       ( `
+*   Caught  : ${ error }`) 
+                                {   console.group   ( `Code:` )
+                                    console.error   ( data.concerns[i].code.toString() )
+                                    console.groupEnd()
+                                }
+                                console.groupEnd()
+                            }
+                            fulfill ( Object.assign ( data.concerns[i], { render : render } ) )
+                        }                          
+
+                        let asyncTestCode = returned    .then   ( onFulfill, onReject )
+                                                        .catch  ( onCatch )
+                        return // concernExecutor
+
+                    } // else if ( returned instanceof Promise )
+
+// Implicit: Validation function NOT expected:
+// Implicit: Synchronous test result handler: 
+                    else if ( returned !== data.concerns[i].want ) {
+                        
+                        // implied: &&  ( 'want' in data.concern[i] )
+                        // implied: &&  (       typeof data.concern[i].want         != 'string' 
+                        //                  ||  data.concern[i].want.toLowerCase()  != 'vfun' 
+
+                        throw `We wanted the code to return : ${data.concerns[i].want}`
+                    }
+
+                    passCount ++
+
+                    // This code is redundant with this code
+                    // TAG: EXPECT_NO_ERROR_RENDER_NO_ERROR FIXME 
+                    render = () => {
+                        console.groupCollapsed      ( `Test: #${ currentTestCount } passed - ${ data.concerns[i].test }` )
+                        console.log                 ( `
+*   Returned: ${ returned }`) 
                         {   console.groupCollapsed  ( `Code:` )
                             console.log             ( data.concerns[i].code.toString() )
                             console.groupEnd        ()
                         }
-                        console.groupEnd        ()
+                        console.groupEnd            ()
+                    }
+                    fulfill ( Object.assign ( data.concerns[i], { render : render } ) )
+                    return // concernExecutor
 
                 } catch (e) {   
-                   
-                    console.group   ( `Test: #${ testCount } failed - ${ data.concerns[i].test }` )
-                    console.error   ( 
-`*   Returned: ${ returned }
+               
+                    // This code is redundant with this code
+                    // TAG: EXPECT_NO_ERROR_RENDER_ERROR FIXME 
+                    render = () => {
+                        console.group       ( `Test: #${ currentTestCount } failed - ${ data.concerns[i].test }` )
+                        console.error       ( 
+`
+*   Returned: ${ returned }
 *   Message : ${ e }`) 
-                    {   console.group   ( `Code:` )
-                        console.error   ( data.concerns[i].code.toString() )
+                        {   console.group   ( `Code:` )
+                            console.error   ( data.concerns[i].code.toString() )
+                            console.groupEnd()
+                        }
                         console.groupEnd()
                     }
-                    console.groupEnd()
+                    fulfill ( Object.assign ( data.concerns[i], { render : render } ) )
+                    return // concernExecutor
 
                 } // catch
 
-            } // TEST_WHERE_ERROR_NOT_EXPECTED
-*/
+} // TEST_WHERE_ERROR_NOT_EXPECTED
+
+            } // concernExecutor
+
+            let currentConcernPromise = new Promise ( concernExecutor )
+            concerns.push ( currentConcernPromise )
+
         } // for ( const i in data.concerns ) 
 
         console.groupEnd ( 'Concerns (toggle expansion)' )
@@ -254,7 +361,7 @@ new Exam ( {
         let n = new Serl.Node ('test1.2')
         return Serl.Proc.nodeIndexFromNodeName ( n, n.name )
     },
-    want : 'VFUN',
+    want : 'vfun',
     vfun : (returned) => Number.isInteger(returned) 
 },
 {   test : '2. Does the Pid class / function / object exist?',
@@ -296,27 +403,26 @@ new Exam ( {
 },
 {   warning : '[TEST #3.n : tests for arities != 1, unwritten at this time; NO DISTRIBUTED COMPUTING.]',
 },
-{   test : `3.3. Process is spawned, then what?`,
+{   test : `3.3. Process is spawned, does its function body execute?`,
     code : function () {
 
-        let exec = ( fulfill /*, reject*/ ) => {
+        let exec = ( fulfill , reject ) => {
 
-            /*
+            globalThis.executionToggle = false
             let n = new Serl.Node ('test3.3')
             let p = n.spawn( ()=>{
 
                 console.log(`NEWS: test 3.3., spawn/1 was called on a function body containing this line`)
-                
-                fulfill ('test3.3. promise fulfillment value')
+                globalThis.executionToggle = true 
             } )
-            */
-            fulfill ('fulfillment value')
+            fulfill ( globalThis.executionToggle )
+
         }
+
         return new Promise ( exec ) 
     },
     want : true,
 },
-
 {   test : `4. Node's procMap is readable ?`,
     code : function () {
         (new Serl.Node).procMap.counter
@@ -450,6 +556,7 @@ begins.]`
 {   warning : `Async test results follow after the exam report. Test framework
 needs to be modified to prevent this.`,
 },
+/*
 {   test : `3.5 : how do processes send messages? (includes 15k message test
 site) (f1a,b,c,d,e, are mutually exclusive options for testing; you want to read
 the code... f1e is the most sophisticated option`,
@@ -579,6 +686,7 @@ the code... f1e is the most sophisticated option`,
 
     }
 },
+*/
 {   warning : `3.4. Do your 15k test by uncommenting the relevant shim.`,
 },
 {   warning : `3.5, here f1bNamed makes a tail-call to itself, but it
