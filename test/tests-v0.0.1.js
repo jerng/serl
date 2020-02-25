@@ -7,6 +7,7 @@ class Exam {
         let testCount   = 0
         let passCount   = 0
         let warnCount   = 0
+        let concerns    = []
 
         console.log (
 `
@@ -19,7 +20,35 @@ class Exam {
         console.group/*Collapsed*/ ( 'Concerns (toggle expansion)' )
 
         for ( const i in data.concerns ) {
-            
+
+            let exec = ( fulfill, reject ) => {
+                if ( data.concerns[i].warning ) {
+
+                    A_WARNING_NOT_A_TEST:
+                    {
+                        warnCount ++
+
+                        fulfill ( Object.assign ( {},
+                            data.concerns[i],
+                            {   render : () => {
+                                    console.group   ( `Warning: #${ warnCount }` )
+                                    console.warn    ( data.concerns[i].warning )
+                                    console.groupEnd()
+                                }
+                            }
+                        ) )
+
+                    }
+
+                } 
+                fulfill ( { render : () => { console.log('not a warning') } } )
+
+            } // exec
+
+            let concernPromise = new Promise ( exec )
+            concerns.push ( concernPromise )
+
+/*            
             if ( data.concerns[i].warning ) {
 
                 A_WARNING_NOT_A_TEST:
@@ -108,19 +137,17 @@ class Exam {
                             }
 
                             // Asynchronous test result handler:
-                            /*
-                            if ( returned instanceof Promise ) {
-                            
-                                let asyncTestHandler = async () => {
-                                    let testFulfillmentValue = await returned
-                                }
+                             // if ( returned instanceof Promise ) {
+                             // 
+                             //     let asyncTestHandler = async () => {
+                             //         let testFulfillmentValue = await returned
+                             //     }
 
-                                //let onFulfilled = ( value ) => {
-                                    
-                                //}
-                                //prom.then ( onFulfilled, onRejected)
-                            }
-                            */
+                             //     //let onFulfilled = ( value ) => {
+                             //         
+                             //     //}
+                             //     //prom.then ( onFulfilled, onRejected)
+                             // }
 
                             // Synchronous test result handler:
                             if ( data.concerns[i].vfun ( returned ) != true ) {
@@ -136,7 +163,14 @@ ${ data.concerns[i].vfun.toString() }`
                             // Asynchronous test result handler: needs to go
                             // here. FIXME
                         else if ( returned instanceof Promise) {
-                            throw 'continue work here'
+                            let onFulfill   = fValue    => {
+                                console.log ( fValue  )
+                            }
+                            let onReject    = rReason   => {
+                                console.log ( rReason )
+                            }
+                            let t = returned.then ( onFulfill, onReject )
+                            console.log ( t )
                         }
                         else if ( returned != data.concerns[i].want ) {
                             
@@ -173,12 +207,16 @@ ${ data.concerns[i].vfun.toString() }`
                 } // catch
 
             } // TEST_WHERE_ERROR_NOT_EXPECTED
-
+*/
         } // for ( const i in data.concerns ) 
 
         console.groupEnd ( 'Concerns (toggle expansion)' )
 
-        console.log (
+
+        // After all test promises have been fulfilled, report:
+        Promise.all ( concerns ).then ( fValues => {
+            fValues.forEach ( ac => ac.render() )
+            console.log (
 `
 **
 *   ... (new Exam) constructed.
@@ -189,6 +227,8 @@ ${ data.concerns[i].vfun.toString() }`
 *   
 *   No further results.
 **`)
+        } )
+
 
     } // constructor()   
 
