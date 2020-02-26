@@ -16,7 +16,7 @@ class Exam {
 *   ... commencing...
 **`)
 
-        console.group/*Collapsed*/ ( 'Concerns (toggle expansion)' )
+        console.groupCollapsed ( 'Initial synchronous run through Concerns:' )
 
         for ( const i in data.concerns ) {
 
@@ -53,6 +53,8 @@ class Exam {
  *
  *                      Synchronous : OK
  *
+ *          ELSE if the Test's Want is 'legible', then THROW failure or RETURN success.
+ *
  *  (> Hereon, the Test implicitly demands only the Wanted value.)
  *
  *          ELSE if the Test returned a Promise, then THROW failure or RETURN success.
@@ -77,8 +79,9 @@ A_WARNING_NOT_A_TEST:
                 if ( data.concerns[i].warning ) {
 
                     warnCount ++
+                    let currentWarnCount = parseInt ( warnCount)
                     render = () => {
-                        console.group   ( `Warning: #${ warnCount }` )
+                        console.group   ( `Warning: #${ currentWarnCount }` )
                         console.warn    ( data.concerns[i].warning )
                         console.groupEnd()
                     }
@@ -89,7 +92,8 @@ A_WARNING_NOT_A_TEST:
 
 } // A_WARNING_NOT_A_TEST
 
-                // Implicit: if Concern is not a Warning, then it must be a Test.
+// Implicit: if Concern is not a Warning, then it must be a Test.
+
                 testCount ++
                 let currentTestCount = parseInt ( testCount)
                 let returned
@@ -152,21 +156,24 @@ TEST_WHERE_ERROR_NOT_EXPECTED:
                 try {   
                     returned = data.concerns[i].code()  
 
-                    if ( ! ( 'want' in data.concerns[i] ) ) {
+                    if ( ! ( 'want' in data.concerns[i] ) ) 
+                    {
                         throw `Writers of this test did not specify what they wanted.`
                     }
-                    
+                    else if (   typeof data.concerns[i].want        == 'string' // redundant with 'legible' 
+                            &&  data.concerns[i].want.toLowerCase() == 'vfun' ) 
+                    {
 
-                    else if (   typeof data.concerns[i].want        == 'string' 
-                            &&  data.concerns[i].want.toLowerCase() == 'vfun' ) {
-
-                        if ( ! ( 'vfun' in data.concerns[i] ) ) {
+                        if ( ! ( 'vfun' in data.concerns[i] ) ) 
+                        {
                             throw `Writers of this test did not specify the validation function.`
                         }
 
 // Explicit: Validation function IS expected:
 // Explicit: Asynchronous test result handler:
-                        else if ( returned instanceof Promise ) {
+
+                        else if ( returned instanceof Promise )
+                        {
                             
                             let onFulfill   = fValue    => {
 
@@ -232,7 +239,9 @@ ${ data.concerns[i].vfun.toString() }
 
 // Explicit: Validation function IS expected:
 // Implicit: Synchronous test result handler:
-                        else if ( data.concerns[i].vfun ( returned ) !== true ) {
+
+                        else if ( data.concerns[i].vfun ( returned ) !== true )
+                        {
                             throw   `
 *   We wanted the code to return a value, RV, where VFUN(RV) returns (true), given a validation function, VFUN, whose body is : 
 
@@ -240,14 +249,37 @@ ${ data.concerns[i].vfun.toString() }
 
 *
 *   Returned: ${returned}`
+
                         }
 
+// Implicit: By this line, the vfun(returned) must be TRUE
+                    
                     } 
+
+// Implicit: By this line, we know we're not looking for a vfun
+                    
+                    else if (   typeof data.concerns[i].want        == 'string' // redundant with 'vfun'
+                            &&  data.concerns[i].want.toLowerCase() == 'legible' ) 
+                    {
+                        render = () => {
+                            console.group               ( `Test: #${ currentTestCount } passed - ${ data.concerns[i].test }` )
+                            console.warn                ( `
+*   Returned: ${ returned }`) 
+                            {   console.groupCollapsed  ( `Code:` )
+                                console.log             ( data.concerns[i].code.toString() )
+                                console.groupEnd        ()
+                            }
+                            console.groupEnd            ()
+                        }
+                        fulfill ( Object.assign ( data.concerns[i], { render : render } ) )
+                        return // concernExecutor
+                    }
                     
 // Implicit: Validation function NOT expected:
 // Explicit: Asynchronous test result handler: 
-                    else if ( returned instanceof Promise) {
 
+                    else if ( returned instanceof Promise) 
+                    {
                         let onFulfill   = fValue    => {
 
                             if ( fValue !== data.concerns[i].want ) {
@@ -310,14 +342,13 @@ ${ data.concerns[i].vfun.toString() }
 
 // Implicit: Validation function NOT expected:
 // Implicit: Synchronous test result handler: 
-                    else if ( returned !== data.concerns[i].want ) {
-                        
-                        // implied: &&  ( 'want' in data.concern[i] )
-                        // implied: &&  (       typeof data.concern[i].want         != 'string' 
-                        //                  ||  data.concern[i].want.toLowerCase()  != 'vfun' 
 
+                    else if ( returned !== data.concerns[i].want )
+                    {
                         throw `We wanted the code to return : ${data.concerns[i].want}`
                     }
+
+// Implicit: Synchronous test has passed. 
 
                     passCount ++
 
@@ -366,12 +397,21 @@ ${ data.concerns[i].vfun.toString() }
 
         } // for ( const i in data.concerns ) 
 
-        console.groupEnd ( 'Concerns (toggle expansion)' )
+        console.groupEnd( 'Initial synchronous run through Concerns:' )
 
+        console.log     ( `
+**
+*   ... all Concerns have been asynchronously despatched;
+*       asynchronous execution will now return further results:
+**` )
 
         // After all test promises have been fulfilled, report:
         Promise.all ( concerns ).then ( fValues => {
+            
+            console.group/*Collapsed*/ ( 'Concerns (toggle expansion)' )
             fValues.forEach ( ac => ac.render() )
+            console.groupEnd ( 'Concerns (toggle expansion)' )
+            
             console.log (
 `
 **
@@ -392,6 +432,7 @@ ${ data.concerns[i].vfun.toString() }
 
 new Exam ( {
     concerns : [
+/*
 {   warning : 'TEST FRAMEWORK : Rendering probably needs to happen in a subsequent loop; currently it is done in the main loop, which results in some very bulky, messy code.' },
 {   test : '1. Does the Node class / function / object exist?',
     code : function () {
@@ -421,13 +462,12 @@ new Exam ( {
     want : 'vfun',
     vfun : (returned) => returned instanceof Serl.Pid 
 },
-{   test : '2.1. Is the Pid\'s .toString() readable?',
+{   test : '2.1. Is the Pid\'s .toString() legible?',
     code : function () {
         let n = new Serl.Node ('test2.1')
         return new Serl.Pid ( 'readableNodeName', 'readableProcIndex' )
     },
-    want : 'vfun',
-    vfun : (r) => r.toString().includes('readable')
+    want : 'legible'
 },
 {   test : '3. Will spawn()-ing an empty function return a Pid object ?',
     code : function () {
@@ -473,117 +513,141 @@ new Exam ( {
     },
     want : true,
 },
-{   test : `4. Node's procMap is readable ?`,
+{   test : `4. Node's procMap is legible ?`,
     code : function () {
-        (new Serl.Node).procMap.counter
-    }
+        return (new Serl.Node).procMap.counter
+    },
+    want : 'legible'
 },
-
 {   test : `4.1. Node's procMap is writable ?`,
     code : function () {
         let n = (new Serl.Node)
+        let initial = n.procMap.counter
         n.procMap.counter += 1
-        return n.procMap.counter
-    }
+        return n.procMap.counter === initial
+    },
+    want : false
 },
 {   test : `5 : does the Proc class / function / object exist?`,
     code : function () {
-        new Serl.Proc ( 'placeholderNodeName', 
+        return new Serl.Proc ( 'placeholderNodeName', 
                         'placeholderProcIndex', 
-                        new Serl.Node ('test5') ) instanceof Serl.Proc
-    }
+                        new Serl.Node ('test5') ) 
+                instanceof Serl.Proc
+    },
+    want : true
 },
 {   test : `5.1 : how readable is the Proc's .toString()?`,
     code : function () {
         let n = new Serl.Node ('test5')
         return new Serl.Proc ( n.name, 'placeholderProcIndex', n ) 
-    }
+    },
+    want : 'legible'
+
 },
 {   warning : `[TEST #6 : what happens to procMap and its counter when processes are removed? What happens when processes are stopped?]`,
 },
+*/
 {   test : `3.4 : how do processes receive messages?`,
     code : function () {
     
+
     //  INIIALISATION of F1
 
         let n   =   new Serl.Node ('test3.4')
         let F1  =   async function(){                                     
 
-            let view_all_3_4 =true 
+            let view_all_3_4 = true // comment toggler
+            let branches
 
-            console.log (`NEWS-3.4, F1: ${this} is spawning; logging the function body
-                line BEFORE this.receive()'s 1st call`) 
+            console.groupCollapsed ('3.4. function F1() body, until first receive():')
+            {
+                view_all_3_4 && console.log (`NEWS-3.4, F1: ${this} is spawning; logging the function body
+                    line BEFORE this.receive()'s 1st call`) 
 
-            let branches = [
-                [   message => message == 1 ,                               // match
-                    message => `match met, message == 1`                    // branch
-                ],
-                [   message => typeof message == 'number',                  // match
-                    message => `match met, message not 1, but a number`     // branch
-                ],
-                [   message => typeof message == 'string',                  // match
-                    message => `match met, not a number, but a string`      // branch
-                ],
-                [   message => typeof message == 'function',                // match
-                    message => () => { return `match met, a function` }     // branch
-                ],
-            ]
+                branches = [
+                    [   message => message == 1 ,                               // match
+                        message => `match met, message == 1`                    // branch
+                    ],
+                    [   message => typeof message == 'number',                  // match
+                        message => `match met, message not 1, but a number`     // branch
+                    ],
+                    [   message => typeof message == 'string',                  // match
+                        message => `match met, not a number, but a string`      // branch
+                    ],
+                    [   message => typeof message == 'function',                // match
+                        message => () => { return `match met, a function` }     // branch
+                    ],
+                ]
 
-            // TODO: nomenclature... awaited? received? = this.receive?  this.waiter?
+                // TODO: nomenclature... awaited? received? = this.receive?  this.waiter?
+            }
+            console.groupEnd ('3.4. function F1() body, until first receive():')
 
             let awaited1     = await this.receive( branches )
             // F1 PAUSES HERE
 
-            view_all_3_4 && console.log (`NEWS-3.4, F1: ${this}; logging the
-                function body line AFTER this.receive()'s 1st call`) 
-            view_all_3_4 && console.log (`NEWS-3.4, F1: ${this}; logging the function body
-                line BEFORE this.receive()'s 2nd call`) 
+            console.groupCollapsed ('3.4. function F1() body, between 1st and 2nd receive():')
+            {
+                view_all_3_4 && console.log (`NEWS-3.4, F1: ${this}; logging the
+                    function body line AFTER this.receive()'s 1st call`) 
+                view_all_3_4 && console.log (`NEWS-3.4, F1: ${this}; logging the function body
+                    line BEFORE this.receive()'s 2nd call`) 
+            }
+            console.groupEnd ('3.4. function F1() body, between 1st and 2nd receive():')
 
             let awaited2    = await this.receive( branches )
             // F1 PAUSES HERE
 
-            view_all_3_4 && console.log (`NEWS-3.4, F1: ${this}; logging the function body line
-                AFTER this.receive()'s 2nd call`) 
-            view_all_3_4 && console.log (`NEWS-3.4, F1: awaited1 is [[${awaited1}]] type: ${typeof
-                awaited1}`)
-            view_all_3_4 && console.log (`NEWS-3.4, F1: awaited2 is [[${awaited2}]] type: ${typeof
-                awaited2}`)
-
+            console.group ('3.4. function F1() body, after 2nd receive():')
+            {
+                view_all_3_4 && console.log (`NEWS-3.4, F1: ${this}; logging the function body line
+                    AFTER this.receive()'s 2nd call`) 
+                view_all_3_4 && console.log (`NEWS-3.4, F1: awaited1 is [[${awaited1}]] type: ${typeof
+                    awaited1}`)
+                view_all_3_4 && console.log (`NEWS-3.4, F1: awaited2 is [[${awaited2}]] type: ${typeof
+                    awaited2}`)
+            }
+            console.groupEnd ('3.4. function F1() body, after 2nd receive():')
 
         } 
         // F1's definition ends
 
-    //  EXECUTION of F1 in a process
+        console.groupCollapsed ('3.4. During excution of spawn(F1) :')
+        {
+        //  EXECUTION of F1 in a process
 
-        let pid     = n.spawn(F1)
-        console.log (`NEWS-3.4: AFTER F1`) 
-            // ... but this runs before Promise resolves...
+            let pid     = n.spawn(F1)
+            console.log (`NEWS-3.4: AFTER F1`) 
+                // ... but this runs before Promise resolves...
 
-    //  TEST: how does the process react?
+        //  TEST: how does the process react?
 
-        let proc    = n.procMap.get(pid) 
+            let proc    = n.procMap.get(pid) 
 
-        console.log (`NEWS-3.4: AFTER F1, sending the message '{1:"should not match"}'...`) 
-        proc.mailHandler ( {1:"should not match"} )
-            // User should never send messages like this.
+            console.log (`NEWS-3.4: AFTER F1, sending the message '{1:"should not match"}'...`) 
+            proc.mailHandler ( {1:"should not match"} )
+                // User should never send messages like this.
 
-        console.log (`NEWS-3.4: AFTER F1, sending the message '{2:"should not match"}'...`) 
-        proc.mailHandler ( {2:"should not match"} )
-            // User should never send messages like this.
-        console.log (proc.mailbox)
+            console.log (`NEWS-3.4: AFTER F1, sending the message '{2:"should not match"}'...`) 
+            proc.mailHandler ( {2:"should not match"} )
+                // User should never send messages like this.
+            console.log (proc.mailbox)
 
-        console.log (`NEWS-3.4: AFTER F1, sending the message 'ohai'...`) 
-        proc.mailHandler ( 'ohai' )
-            // User should never send messages like this.
-        console.log (proc.mailbox)
+            console.log (`NEWS-3.4: AFTER F1, sending the message 'ohai'...`) 
+            proc.mailHandler ( 'ohai' )
+                // User should never send messages like this.
+            console.log (proc.mailbox)
 
-        console.log (`NEWS-3.4: AFTER F1, sending the message '()=>{}'...`) 
-        proc.mailHandler ( ()=>{} )
-            // User should never send messages like this.
-        console.log (proc.mailbox)
-
+            console.log (`NEWS-3.4: AFTER F1, sending the message '()=>{}'...`) 
+            proc.mailHandler ( ()=>{} )
+                // User should never send messages like this.
+            console.log (proc.mailbox)
+        }
+        console.groupEnd ('3.4. During excution of spawn(F1) :')
     }
 },
+/*
 {   warning : `
 3.4: break this up into a series of small tests
     //  Code it here, then move it to serl.js
@@ -606,6 +670,7 @@ begins.]`
 {   warning : `Async test results follow after the exam report. Test framework
 needs to be modified to prevent this.`,
 },
+*/
 /*
 {   test : `3.5 : how do processes send messages? (includes 15k message test
 site) (f1a,b,c,d,e, are mutually exclusive options for testing; you want to read
@@ -736,13 +801,13 @@ the code... f1e is the most sophisticated option`,
 
     }
 },
-*/
 {   warning : `3.4. Do your 15k test by uncommenting the relevant shim.`,
 },
 {   warning : `3.5, here f1bNamed makes a tail-call to itself, but it
 is not clear that this will not blow the call-stack; see note at f1bNamed;
 check`,
 },
+*/
 
 
 
