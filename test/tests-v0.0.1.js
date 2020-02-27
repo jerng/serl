@@ -1,439 +1,9 @@
 import * as Serl from '../lib/serl.js'
 import * as SSON from '../lib/sson/sson.js'
+import * as Exam from '../lib/classes/exam.js'
 
-class Exam {
-
-    constructor ( data ) {
-       
-        let testCount   = 0
-        let passCount   = 0
-        let warnCount   = 0
-        let concerns    = []
-
-        console.log ( `
-**
-*   (new Exam)!
-*   Number of concerns : ${data.concerns.length}
-*   ... commencing...
-**`)
-
-        console.groupCollapsed ( 'Initial synchronous run through Concerns:' )
-
-        for ( const i in data.concerns ) {
-
-            let render
-            let concernExecutor = ( fulfill, reject ) => {
-
-/** LOGIC MAP
- *
- *          IF the Concern is a Warning, then RETURN. 
- *
- *  (> Hereon, the Concern is implicitly a Test.)
- *          
- *          IF the Test Expects-an-error, then THROW failure or RETURN success.
- *
- *              Synchronous     : OK
- *
- *              Asynchronous    : Not Supported <-FIXME--------------------------- FIXME
- *
- *  (> Hereon, the Test implicitly Expects-NO-error.)
- *
- *          IF the Test's Want is not defined, then THROW.
- *
- *          ELSE if the Test's Want is 'vfun', then
- *
- *                  IF 'vfun' is missing, then THROW.
- *        
- *                  ELSE if the Test returned a Promise, then THROW failure or RETURN success.
- *
- *                      Asynchronous    : OK
- *        
- *      (> Hereon, the Test implicitly is synchronous.)
- *        
- *                  ELSE if the Test's 'vfun' returns anything but TRUE, then THROW.
- *
- *                      Synchronous : OK
- *
- *          ELSE if the Test's Want is 'legible', then THROW failure or RETURN success.
- *
- *  (> Hereon, the Test implicitly demands only the Wanted value.)
- *
- *          ELSE if the Test returned a Promise, then THROW failure or RETURN success.
- *
- *              Asynchronous    : OK
- *  
- *  (> Hereon, the Test implicitly is synchronous.)
- *
- *          ELSE if the Test returned anything but the Wanted value, then THROW.
- *
- *              Synchronous : OK
- *
- *  (> Hereon, the Test should have RETURNED success, via 'vfun returned TRUE'
- *  or 'demands only the Wanted value' if it has not, it will now do so.)
- *
- *
- *
- */
-
-A_WARNING_NOT_A_TEST: 
-{ 
-                if ( data.concerns[i].warning ) {
-
-                    warnCount ++
-                    let currentWarnCount = parseInt ( warnCount)
-                    render = () => {
-                        console.group   ( `Warning: #${ currentWarnCount }` )
-                        console.warn    ( data.concerns[i].warning )
-                        console.groupEnd()
-                    }
-                    fulfill ( Object.assign ( data.concerns[i], { render : render } ) )
-                    return // concernExecutor
-
-                } // if 
-
-} // A_WARNING_NOT_A_TEST
-
-// Implicit: if Concern is not a Warning, then it must be a Test.
-
-                testCount ++
-                let currentTestCount = parseInt ( testCount)
-                let returned
-
-TEST_WHERE_ERROR_EXPECTED: 
-{   
-                if ( data.concerns[i].expectError ) {
-
-                    let errorThrown     = false
-                    try {
-
-                        returned        = data.concerns[i].code()
-
-                    } catch (e) {
-
-                        errorThrown     = true 
-                        passCount ++ 
-
-                        render = () => {
-                            console.groupCollapsed      ( `Test: #${ currentTestCount } passed (caught an Error) - ${ data.concerns[i].test }` )
-                            console.log                 ( `
-*   Caught  : ${ e }
-*   Returned: ${ returned }`) 
-                            {   console.groupCollapsed  ( `Code:` )
-                                console.log             ( data.concerns[i].code.toString() )
-                                console.groupEnd        ()
-                            }
-                            console.groupEnd            ()
-                        }
-                        fulfill ( Object.assign ( data.concerns[i], { render : render } ) )
-                        return // concernExecutor
-
-                    } finally {
-                        
-                        if ( ! errorThrown ) {
-                            
-                            render = () => {
-                                console.group       ( `Test: #${ currentTestCount } failed (caught no Error) - ${ data.concerns[i].test }` )
-                                console.error       ( `
-*   Returned: ${ returned }`) 
-                                {   console.group   ( `Code:` )
-                                    console.error   ( data.concerns[i].code.toString() )
-                                    console.groupEnd()
-                                }
-                                console.groupEnd    ()
-                            }
-                            fulfill ( Object.assign ( data.concerns[i], { render : render } ) )
-                            return // concernExecutor
-
-                        } // if ( ! errorThrown)
-
-                    } // finally
-                    
-                } // if 
-
-} // TEST_WHERE_ERROR_EXPECTED
-
-TEST_WHERE_ERROR_NOT_EXPECTED:
-{
-                try {   
-                    returned = data.concerns[i].code()  
-
-                    if ( ! ( 'want' in data.concerns[i] ) ) 
-                    {
-                        throw `Writers of this test did not specify what they wanted.`
-                    }
-                    else if (   typeof data.concerns[i].want        == 'string' // redundant with 'legible' 
-                            &&  data.concerns[i].want.toLowerCase() == 'vfun' ) 
-                    {
-
-                        if ( ! ( 'vfun' in data.concerns[i] ) ) 
-                        {
-                            throw `Writers of this test did not specify the validation function.`
-                        }
-
-// Explicit: Validation function IS expected:
-// Explicit: Asynchronous test result handler:
-
-                        else if ( returned instanceof Promise )
-                        {
-                            
-                            let onFulfill   = fValue    => {
-
-                                if ( data.concerns[i].vfun ( fValue ) !== true ) {
-
-                                    throw `
-*   We wanted the code to return a Promise fulfiled with the value, RV, where VFUN(RV) returns (true), given a validation function, VFUN, whose body is : 
-
-${ data.concerns[i].vfun.toString() } 
-
-*
-*   Returned: a Promise
-*       State   : fulfilled
-*       Value   : ${fValue}`
-                                }
-                                
-                                passCount ++
-                                
-                                // This code is redundant with this code
-                                // TAG: EXPECT_NO_ERROR_RENDER_NO_ERROR FIXME 
-                                render = () => {
-                                    console.groupCollapsed      ( `Test: #${ currentTestCount } passed - ${ data.concerns[i].test }` )
-                                    console.log                 ( `
-*   Returned: a Promise
-*       State   : fulfilled
-*       Value   : ${ fValue }`) 
-                                    {   console.groupCollapsed  ( `Code:` )
-                                        console.log             ( data.concerns[i].code.toString() )
-                                        console.groupEnd        ()
-                                    }
-                                    console.groupEnd            ()
-                                }
-                                fulfill ( Object.assign ( data.concerns[i], { render : render } ) )
-                            }
-
-                            let onReject    = rReason   => {
-                                throw `
-*   Returned: a Promise 
-*       State   : rejected
-*       Reason  : ${rReason}`
-                            }
-
-                            let onCatch     = error => {
-                                // This code is redundant with this code
-                                // TAG: EXPECT_NO_ERROR_RENDER_ERROR FIXME 
-                                render = () => {
-                                    console.group       ( `Test: #${ currentTestCount } failed - ${ data.concerns[i].test }` )
-                                    console.error       ( `
-*   Caught  : ${ error }`) 
-                                    {   console.group   ( `Code:` )
-                                        console.error   ( data.concerns[i].code.toString() )
-                                        console.groupEnd()
-                                    }
-                                    console.groupEnd()
-                                }
-                                fulfill ( Object.assign ( data.concerns[i], { render : render } ) )
-                            }                          
-
-                            let asyncTestCode = returned    .then   ( onFulfill, onReject )
-                                                            .catch  ( onCatch )
-                            return // concernExecutor
-                        }
-
-// Explicit: Validation function IS expected:
-// Implicit: Synchronous test result handler:
-
-                        else if ( data.concerns[i].vfun ( returned ) !== true )
-                        {
-                            throw   `
-*   We wanted the code to return a value, RV, where VFUN(RV) returns (true), given a validation function, VFUN, whose body is : 
-
-${ data.concerns[i].vfun.toString() }
-
-*
-*   Returned: ${returned}`
-
-                        }
-
-// Implicit: By this line, the vfun(returned) must be TRUE
-                    
-                    } 
-
-// Implicit: By this line, we know we're not looking for a vfun
-                    
-                    else if (   typeof data.concerns[i].want        == 'string' // redundant with 'vfun'
-                            &&  data.concerns[i].want.toLowerCase() == 'legible' ) 
-                    {
-                        render = () => {
-                            console.group               ( `Test: #${ currentTestCount } passed - ${ data.concerns[i].test }` )
-                            console.warn                ( `
-*   Returned: ${ returned }`) 
-                            {   console.groupCollapsed  ( `Code:` )
-                                console.log             ( data.concerns[i].code.toString() )
-                                console.groupEnd        ()
-                            }
-                            console.groupEnd            ()
-                        }
-                        fulfill ( Object.assign ( data.concerns[i], { render : render } ) )
-                        return // concernExecutor
-                    }
-                    
-// Implicit: Validation function NOT expected:
-// Explicit: Asynchronous test result handler: 
-
-                    else if ( returned instanceof Promise) 
-                    {
-                        let onFulfill   = fValue    => {
-
-                            if ( fValue !== data.concerns[i].want ) {
-
-                                throw `
-*   We wanted the code to return a Promise fulfiled with the value : ${data.concerns[i].want}
-*
-*   Returned: a Promise
-*       State   : fulfilled
-*       Value   : ${fValue}`
-                            }
-                            
-                            passCount ++
-                            
-                            // This code is redundant with this code
-                            // TAG: EXPECT_NO_ERROR_RENDER_NO_ERROR FIXME 
-                            render = () => {
-                                console.groupCollapsed      ( `Test: #${ currentTestCount } passed - ${ data.concerns[i].test }` )
-                                console.log                 ( `
-*   Returned: a Promise
-*       State   : fulfilled
-*       Value   : ${ fValue }`) 
-                                {   console.groupCollapsed  ( `Code:` )
-                                    console.log             ( data.concerns[i].code.toString() )
-                                    console.groupEnd        ()
-                                }
-                                console.groupEnd            ()
-                            }
-                            fulfill ( Object.assign ( data.concerns[i], { render : render } ) )
-                        }
-
-                        let onReject    = rReason   => {
-                            throw `
-*   Returned: a Promise 
-*       State   : rejected
-*       Reason  : ${rReason}`
-                        }
-
-                        let onCatch     = error => {
-                            // This code is redundant with this code
-                            // TAG: EXPECT_NO_ERROR_RENDER_ERROR FIXME 
-                            render = () => {
-                                console.group       ( `Test: #${ currentTestCount } failed - ${ data.concerns[i].test }` )
-                                console.error       ( `
-*   Caught  : ${ error }`) 
-                                {   console.group   ( `Code:` )
-                                    console.error   ( data.concerns[i].code.toString() )
-                                    console.groupEnd()
-                                }
-                                console.groupEnd()
-                            }
-                            fulfill ( Object.assign ( data.concerns[i], { render : render } ) )
-                        }                          
-
-                        let asyncTestCode = returned    .then   ( onFulfill, onReject )
-                                                        .catch  ( onCatch )
-                        return // concernExecutor
-
-                    } // else if ( returned instanceof Promise )
-
-// Implicit: Validation function NOT expected:
-// Implicit: Synchronous test result handler: 
-
-                    else if ( returned !== data.concerns[i].want )
-                    {
-                        throw `We wanted the code to return : ${data.concerns[i].want}`
-                    }
-
-// Implicit: Synchronous test has passed. 
-
-                    passCount ++
-
-                    // This code is redundant with this code
-                    // TAG: EXPECT_NO_ERROR_RENDER_NO_ERROR FIXME 
-                    render = () => {
-                        console.groupCollapsed      ( `Test: #${ currentTestCount } passed - ${ data.concerns[i].test }` )
-                        console.log                 ( `
-*   Returned: ${ returned }`) 
-                        {   console.groupCollapsed  ( `Code:` )
-                            console.log             ( data.concerns[i].code.toString() )
-                            console.groupEnd        ()
-                        }
-                        console.groupEnd            ()
-                    }
-                    fulfill ( Object.assign ( data.concerns[i], { render : render } ) )
-                    return // concernExecutor
-
-                } catch (e) {   
-               
-                    // This code is redundant with this code
-                    // TAG: EXPECT_NO_ERROR_RENDER_ERROR FIXME 
-                    render = () => {
-                        console.group       ( `Test: #${ currentTestCount } failed - ${ data.concerns[i].test }` )
-                        console.error       ( 
-`
-*   Returned: ${ returned }
-*   Message : ${ e }`) 
-                        {   console.group   ( `Code:` )
-                            console.error   ( data.concerns[i].code.toString() )
-                            console.groupEnd()
-                        }
-                        console.groupEnd()
-                    }
-                    fulfill ( Object.assign ( data.concerns[i], { render : render } ) )
-                    return // concernExecutor
-
-                } // catch
-
-} // TEST_WHERE_ERROR_NOT_EXPECTED
-
-            } // concernExecutor
-
-            let currentConcernPromise = new Promise ( concernExecutor )
-            concerns.push ( currentConcernPromise )
-
-        } // for ( const i in data.concerns ) 
-
-        console.groupEnd( 'Initial synchronous run through Concerns:' )
-
-        console.log     ( `
-**
-*   ... all Concerns have now been synchronously despatched, to asynchronous jobs;
-*       asynchronous job execution will now return further results:
-**` )
-
-        // After all test promises have been fulfilled, report:
-        Promise.all ( concerns ).then ( fValues => {
-            
-            console.group/*Collapsed*/ ( 'Concerns (toggle expansion)' )
-            fValues.forEach ( ac => ac.render() )
-            console.groupEnd ( 'Concerns (toggle expansion)' )
-            
-            console.log (
-`
-**
-*   ... (new Exam) constructed.
-*   Number of tests             : ${testCount}
-*   Number of tests passed      : ${passCount}
-*   Number of tests failed -----: ${testCount - passCount}
-*   Number of warnings logged   : ${warnCount}
-*   
-*   No further results.
-**`)
-        } )
-
-
-    } // constructor()   
-
-} // class Exam
-
-new Exam ( {
+new Exam.Exam ( {
     concerns : [
-/*
 {   warning : 'TEST FRAMEWORK : Rendering probably needs to happen in a subsequent loop; currently it is done in the main loop, which results in some very bulky, messy code.' },
 {   test : '1. Does the Node class / function / object exist?',
     code : function () {
@@ -548,148 +118,144 @@ new Exam ( {
 },
 {   warning : `[TEST #6 : what happens to procMap and its counter when processes are removed? What happens when processes are stopped?]`,
 },
-*/
 {   test : `3.4 : how do processes receive messages?`,
     code : function () {
-    
 
-    //  INIIALISATION of F1
+        let returnedPromise = new Promise ( ( fulfill, reject ) => {
 
-        let n   =   new Serl.Node ('test3.4')
-        let F1  =   async function(){                                     
+            //  INIIALISATION of F1
 
-            let view_all_3_4 = true // comment toggler
-            let branches
+            let n   =   new Serl.Node ('test3.4')
+            let F1  =   async function(){
 
-            console.groupCollapsed ('3.4.2. F1() body')
+                let view_all_3_4 = true // comment toggler
+                let branches
+
+                console.groupCollapsed ('3.4.2. F1() body')
+                {
+                    view_all_3_4 && console.log (`NEWS-3.4, F1: ${this} is spawning; logging the function body
+                        line BEFORE this.receive()'s 1st call`) 
+
+                    branches = [
+                        [   message => message == 1 ,                               // guard
+                            message => `guard passed, message == 1`                    // path
+                        ],
+                        [   message => typeof message == 'number',                  // guard
+                            message => `guard passed, message not 1, but a number`     // path
+                        ],
+                        [   message => typeof message == 'string',                  // guard
+                            message => `guard passed, not a number, but a string`      // path
+                        ],
+                        [   message => typeof message == 'function',                // guard
+                            message => () => { return `guard passed, a function` }     // path
+                        ],
+                    ]
+
+                    // TODO: nomenclature... awaited? received? = this.receive?  this.waiter?
+                }
+                console.groupEnd ('3.4.2. F1() body')
+
+                let awaited1     = await this.receive( branches )
+                // F1 PAUSES HERE
+
+                console.groupCollapsed ('3.4.3. F1() body')
+                {
+                    view_all_3_4 && console.log (`NEWS-3.4, F1: ${this}; logging the
+                        function body line AFTER this.receive()'s 1st call`) 
+                    view_all_3_4 && console.log (`NEWS-3.4, F1: awaited1 is [[${awaited1}]] type: ${typeof
+                        awaited1}`)
+                    view_all_3_4 && console.log (`NEWS-3.4, F1: ${this}; logging the function body
+                        line BEFORE this.receive()'s 2nd call`) 
+                }
+                console.groupEnd ('3.4.3. F1() body')
+
+                let awaited2    = await this.receive( branches )
+                // F1 PAUSES HERE
+
+                console.group ('3.4.4. F1() body')
+                {
+                    view_all_3_4 && console.log (`NEWS-3.4, F1: ${this}; logging the function body line
+                        AFTER this.receive()'s 2nd call`) 
+                    view_all_3_4 && console.log (`NEWS-3.4, F1: awaited2 is [[${awaited2}]] type: ${typeof
+                        awaited2}`)
+                }
+                console.groupEnd  ('3.4.4. F1() body')
+
+                // store test results
+                globalThis.TEST_3_4     = [ this.mailbox, awaited1, awaited2 ]
+
+            } 
+            // F1's definition ends
+
+            console.groupCollapsed ('3.4.1. spawn(F1) :')
             {
-                view_all_3_4 && console.log (`NEWS-3.4, F1: ${this} is spawning; logging the function body
-                    line BEFORE this.receive()'s 1st call`) 
+            //  EXECUTION of F1 in a process
 
-                branches = [
-                    [   message => message == 1 ,                               // guard
-                        message => `guard passed, message == 1`                    // path
-                    ],
-                    [   message => typeof message == 'number',                  // guard
-                        message => `guard passed, message not 1, but a number`     // path
-                    ],
-                    [   message => typeof message == 'string',                  // guard
-                        message => `guard passed, not a number, but a string`      // path
-                    ],
-                    [   message => typeof message == 'function',                // guard
-                        message => () => { return `guard passed, a function` }     // path
-                    ],
-                ]
+                let pid     = n.spawn(F1)
+                
+                // at this point, 
+                //  'let awaited1 = await this.receive(branches)
+                //  proc.mailHandler has been customised by proc.receive; end 3.4.2.
+                //  F1's execution context is pushed onto the stack, with control returning to
+                //  this line ->>
 
-                // TODO: nomenclature... awaited? received? = this.receive?  this.waiter?
+                console.log (`NEWS-3.4: AFTER F1`) 
+
+            //  TEST: how does the process react?
+
+                let proc    = n.procMap.get(pid) 
+                let m1      = {1:"should not match"}
+                let m2      = {2:"should not match"}
+                
+                proc.mailHandler ( m1 ) // User should never send messages like this.
+                    console.log (`NEWS-3.4: AFTER F1, sending the message '${m1}'...`) 
+
+                proc.mailHandler ( m2 ) // User should never send messages like this.
+                    console.log (`NEWS-3.4: AFTER F1, sending the message '${m2}'...`) 
+
+                proc.mailHandler ( 'ohai' ) // User should never send messages like this.
+
+                //  The customised mailHandler lets 'ohai' pass,
+                //  proc.mailHandler is reset to defaultMailHandler;
+                //  and proc.(default)mailHandler stores the message ()=>{}
+                //
+                //  then, F1's execution is paused, with control passed to : 
+                //  'let awaited2 = await this.receive(branches)
+                //
+                //  proc.mailHandler SHOULD HAVE been customised by proc.receive
+                // 
+
+                    console.log (`NEWS-3.4: AFTER F1, sending the message 'ohai'...`) 
+
+                proc.mailHandler ( ()=>{} ) // User should never send messages like this.
+                    console.log (`NEWS-3.4: AFTER F1, sending the message '()=>{}'...`) 
+
+                // Initial synchronous run through concerns, ended here.
+                //  then F1's execution context is popped,  and control is returned to it; 
+                // -->> start 3.4.3. 
+
             }
-            console.groupEnd ('3.4.2. F1() body')
-
-            let awaited1     = await this.receive( branches )
-            // F1 PAUSES HERE
-
-            console.groupCollapsed ('3.4.3. F1() body')
-            {
-                view_all_3_4 && console.log (`NEWS-3.4, F1: ${this}; logging the
-                    function body line AFTER this.receive()'s 1st call`) 
-                view_all_3_4 && console.log (`NEWS-3.4, F1: awaited1 is [[${awaited1}]] type: ${typeof
-                    awaited1}`)
-                view_all_3_4 && console.log (`NEWS-3.4, F1: ${this}; logging the function body
-                    line BEFORE this.receive()'s 2nd call`) 
-            }
-            console.groupEnd ('3.4.3. F1() body')
-
-            let awaited2    = await this.receive( branches )
-            // F1 PAUSES HERE
-
-            console.group ('3.4.4. F1() body')
-            {
-                view_all_3_4 && console.log (`NEWS-3.4, F1: ${this}; logging the function body line
-                    AFTER this.receive()'s 2nd call`) 
-                view_all_3_4 && console.log (`NEWS-3.4, F1: awaited2 is [[${awaited2}]] type: ${typeof
-                    awaited2}`)
-            }
-            console.groupEnd  ('3.4.4. F1() body')
-
-        } 
-        // F1's definition ends
-
-        let result  = []
-        
-        console.groupCollapsed ('3.4.1. spawn(F1) :')
-        {
-        //  EXECUTION of F1 in a process
-
-            let pid     = n.spawn(F1)
+            console.groupEnd ('3.4.1. spawn(F1) :')
             
-// at this point, F1's execution is paused, with control passed to :
-//  'let awaited1 = await this.receive(branches)
-//  proc.mailHandler has been customised by proc.receive
+            // In the future, get the test results and fulfill the promise
+            setTimeout ( ()=>{ 
+                    fulfill ( JSON.stringify ( globalThis.TEST_3_4 , SSON.replacer, 2) ) 
+                }, 
+                1000 
+            )
 
-            console.log (`NEWS-3.4: AFTER F1`) 
-
-        //  TEST: how does the process react?
-
-            let proc    = n.procMap.get(pid) 
-            let m1      = {1:"should not match"}
-            let m2      = {2:"should not match"}
-            
-            proc.mailHandler ( m1 ) // User should never send messages like this.
-                console.log (`NEWS-3.4: AFTER F1, sending the message '${m1}'...`) 
-                result.push ( [ ... proc.mailbox ] )
-                console.log ( [ ... proc.mailbox ] )
-
-            proc.mailHandler ( m2 ) // User should never send messages like this.
-                console.log (`NEWS-3.4: AFTER F1, sending the message '${m2}'...`) 
-                result.push ( [ ... proc.mailbox ] )
-                console.log ( [ ... proc.mailbox ] )
-
-            proc.mailHandler ( 'ohai' ) // User should never send messages like this.
-
-//  The customised mailHandler lets 'ohai' pass,
-//  proc.mailHandler is reset to defaultMailHandler;
-//  then this.receive passed control back to F1, and F1's execution resumes,
-//  and proc.(default)mailHandler stores the message ()=>{}
-//
-//  then, F1's execution is paused, with control passed to :
-//  'let awaited2 = await this.receive(branches)
-//  proc.mailHandler SHOULD HAVE been customised by proc.receive
-// 
-
-                console.log (`NEWS-3.4: AFTER F1, sending the message 'ohai'...`) 
-                result.push ( [ ... proc.mailbox ] )
-                console.log ( [ ... proc.mailbox ] )
-
-            proc.mailHandler ( ()=>{} ) // User should never send messages like this.
-                console.log (`NEWS-3.4: AFTER F1, sending the message '()=>{}'...`) 
-               // result.push ( [ ... proc.mailbox ] )
-                console.log ( [ ... proc.mailbox ] )
-
-// Initial synchronus run through concerns, ended here.
-
-        }
-        console.groupEnd ('3.4.1. spawn(F1) :')
-        return JSON.stringify ( result, SSON.replace, 2 )
+        } ) // new Promise
+        return returnedPromise
     },
     want : JSON.stringify ( 
-        [   [   {1:"should not match"}  // first message (Object) received, not handled, left in mailbox
-            ],
-
-            [   {1:"should not match"}, // second message (Object) received, not handled, left in mailbox
+        [   [   {1:"should not match"},
                 {2:"should not match"}
             ],
-
-            [   {1:"should not match"}, // third message (String) received, handled, cleared from mailbox
-                {2:"should not match"}
-            ],
-
-          //[   {1:"should not match"}, // fourth message (Function) received, handled, cleared from mailbox
-          //    {2:"should not match"}
-          //]
+            `guard passed, not a number, but a string`,
+            () => { return `guard passed, a function` }
         ],
         SSON.replacer, 2 )
 },
-/*
 {   warning : `
 3.4: break this up into a series of small tests
     //  Code it here, then move it to serl.js
@@ -712,8 +278,6 @@ begins.]`
 {   warning : `Async test results follow after the exam report. Test framework
 needs to be modified to prevent this.`,
 },
-*/
-/*
 {   test : `3.5 : how do processes send messages? (includes 15k message test
 site) (f1a,b,c,d,e, are mutually exclusive options for testing; you want to read
 the code... f1e is the most sophisticated option`,
@@ -841,7 +405,8 @@ the code... f1e is the most sophisticated option`,
 
         return 'placeholder'
 
-    }
+    },
+    want : 'legible'
 },
 {   warning : `3.4. Do your 15k test by uncommenting the relevant shim.`,
 },
@@ -849,7 +414,6 @@ the code... f1e is the most sophisticated option`,
 is not clear that this will not blow the call-stack; see note at f1bNamed;
 check`,
 },
-*/
 
 
 
