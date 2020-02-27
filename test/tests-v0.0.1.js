@@ -561,97 +561,114 @@ new Exam ( {
             let view_all_3_4 = true // comment toggler
             let branches
 
-            console.groupCollapsed ('3.4. function F1() body, until first receive():')
+            console.groupCollapsed ('3.4.2. F1() body')
             {
                 view_all_3_4 && console.log (`NEWS-3.4, F1: ${this} is spawning; logging the function body
                     line BEFORE this.receive()'s 1st call`) 
 
                 branches = [
-                    [   message => message == 1 ,                               // match
-                        message => `match met, message == 1`                    // branch
+                    [   message => message == 1 ,                               // guard
+                        message => `guard passed, message == 1`                    // path
                     ],
-                    [   message => typeof message == 'number',                  // match
-                        message => `match met, message not 1, but a number`     // branch
+                    [   message => typeof message == 'number',                  // guard
+                        message => `guard passed, message not 1, but a number`     // path
                     ],
-                    [   message => typeof message == 'string',                  // match
-                        message => `match met, not a number, but a string`      // branch
+                    [   message => typeof message == 'string',                  // guard
+                        message => `guard passed, not a number, but a string`      // path
                     ],
-                    [   message => typeof message == 'function',                // match
-                        message => () => { return `match met, a function` }     // branch
+                    [   message => typeof message == 'function',                // guard
+                        message => () => { return `guard passed, a function` }     // path
                     ],
                 ]
 
                 // TODO: nomenclature... awaited? received? = this.receive?  this.waiter?
             }
-            console.groupEnd ('3.4. function F1() body, until first receive():')
+            console.groupEnd ('3.4.2. F1() body')
 
             let awaited1     = await this.receive( branches )
             // F1 PAUSES HERE
 
-            console.groupCollapsed ('3.4. function F1() body, between 1st and 2nd receive():')
+            console.groupCollapsed ('3.4.3. F1() body')
             {
                 view_all_3_4 && console.log (`NEWS-3.4, F1: ${this}; logging the
                     function body line AFTER this.receive()'s 1st call`) 
+                view_all_3_4 && console.log (`NEWS-3.4, F1: awaited1 is [[${awaited1}]] type: ${typeof
+                    awaited1}`)
                 view_all_3_4 && console.log (`NEWS-3.4, F1: ${this}; logging the function body
                     line BEFORE this.receive()'s 2nd call`) 
             }
-            console.groupEnd ('3.4. function F1() body, between 1st and 2nd receive():')
+            console.groupEnd ('3.4.3. F1() body')
 
             let awaited2    = await this.receive( branches )
             // F1 PAUSES HERE
 
-            console.group ('3.4. function F1() body, after 2nd receive():')
+            console.group ('3.4.4. F1() body')
             {
                 view_all_3_4 && console.log (`NEWS-3.4, F1: ${this}; logging the function body line
                     AFTER this.receive()'s 2nd call`) 
-                view_all_3_4 && console.log (`NEWS-3.4, F1: awaited1 is [[${awaited1}]] type: ${typeof
-                    awaited1}`)
                 view_all_3_4 && console.log (`NEWS-3.4, F1: awaited2 is [[${awaited2}]] type: ${typeof
                     awaited2}`)
             }
-            console.groupEnd ('3.4. function F1() body, after 2nd receive():')
+            console.groupEnd  ('3.4.4. F1() body')
 
         } 
         // F1's definition ends
 
         let result  = []
         
-        console.groupCollapsed ('3.4. During excution of spawn(F1) :')
+        console.groupCollapsed ('3.4.1. spawn(F1) :')
         {
         //  EXECUTION of F1 in a process
 
             let pid     = n.spawn(F1)
+            
+// at this point, F1's execution is paused, with control passed to :
+//  'let awaited1 = await this.receive(branches)
+//  proc.mailHandler has been customised by proc.receive
+
             console.log (`NEWS-3.4: AFTER F1`) 
-                // ... but this runs before Promise resolves...
 
         //  TEST: how does the process react?
 
             let proc    = n.procMap.get(pid) 
             let m1      = {1:"should not match"}
             let m2      = {2:"should not match"}
-
             
-            console.log (`NEWS-3.4: AFTER F1, sending the message '${m1}'...`) 
             proc.mailHandler ( m1 ) // User should never send messages like this.
-            result.push ( [ ... proc.mailbox ] )
-            console.log ( [ ... proc.mailbox ] )
+                console.log (`NEWS-3.4: AFTER F1, sending the message '${m1}'...`) 
+                result.push ( [ ... proc.mailbox ] )
+                console.log ( [ ... proc.mailbox ] )
 
-            console.log (`NEWS-3.4: AFTER F1, sending the message '${m2}'...`) 
             proc.mailHandler ( m2 ) // User should never send messages like this.
-            result.push ( [ ... proc.mailbox ] )
-            console.log ( [ ... proc.mailbox ] )
+                console.log (`NEWS-3.4: AFTER F1, sending the message '${m2}'...`) 
+                result.push ( [ ... proc.mailbox ] )
+                console.log ( [ ... proc.mailbox ] )
 
-            console.log (`NEWS-3.4: AFTER F1, sending the message 'ohai'...`) 
             proc.mailHandler ( 'ohai' ) // User should never send messages like this.
-            result.push ( [ ... proc.mailbox ] )
-            console.log ( [ ... proc.mailbox ] )
 
-            console.log (`NEWS-3.4: AFTER F1, sending the message '()=>{}'...`) 
+//  The customised mailHandler lets 'ohai' pass,
+//  proc.mailHandler is reset to defaultMailHandler;
+//  then this.receive passed control back to F1, and F1's execution resumes,
+//  and proc.(default)mailHandler stores the message ()=>{}
+//
+//  then, F1's execution is paused, with control passed to :
+//  'let awaited2 = await this.receive(branches)
+//  proc.mailHandler SHOULD HAVE been customised by proc.receive
+// 
+
+                console.log (`NEWS-3.4: AFTER F1, sending the message 'ohai'...`) 
+                result.push ( [ ... proc.mailbox ] )
+                console.log ( [ ... proc.mailbox ] )
+
             proc.mailHandler ( ()=>{} ) // User should never send messages like this.
-           // result.push ( [ ... proc.mailbox ] )
-            console.log ( [ ... proc.mailbox ] )
+                console.log (`NEWS-3.4: AFTER F1, sending the message '()=>{}'...`) 
+               // result.push ( [ ... proc.mailbox ] )
+                console.log ( [ ... proc.mailbox ] )
+
+// Initial synchronus run through concerns, ended here.
+
         }
-        console.groupEnd ('3.4. During excution of spawn(F1) :')
+        console.groupEnd ('3.4.1. spawn(F1) :')
         return JSON.stringify ( result, SSON.replace, 2 )
     },
     want : JSON.stringify ( 
