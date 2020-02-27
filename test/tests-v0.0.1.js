@@ -1,4 +1,5 @@
 import * as Serl from '../lib/serl.js'
+import * as SSON from '../lib/sson/sson.js'
 
 class Exam {
 
@@ -401,8 +402,8 @@ ${ data.concerns[i].vfun.toString() }
 
         console.log     ( `
 **
-*   ... all Concerns have been asynchronously despatched;
-*       asynchronous execution will now return further results:
+*   ... all Concerns have now been synchronously despatched, to asynchronous jobs;
+*       asynchronous job execution will now return further results:
 **` )
 
         // After all test promises have been fulfilled, report:
@@ -613,6 +614,8 @@ new Exam ( {
         } 
         // F1's definition ends
 
+        let result  = []
+        
         console.groupCollapsed ('3.4. During excution of spawn(F1) :')
         {
         //  EXECUTION of F1 in a process
@@ -624,28 +627,50 @@ new Exam ( {
         //  TEST: how does the process react?
 
             let proc    = n.procMap.get(pid) 
+            let m1      = {1:"should not match"}
+            let m2      = {2:"should not match"}
 
-            console.log (`NEWS-3.4: AFTER F1, sending the message '{1:"should not match"}'...`) 
-            proc.mailHandler ( {1:"should not match"} )
-                // User should never send messages like this.
+            
+            console.log (`NEWS-3.4: AFTER F1, sending the message '${m1}'...`) 
+            proc.mailHandler ( m1 ) // User should never send messages like this.
+            result.push ( [ ... proc.mailbox ] )
+            console.log ( [ ... proc.mailbox ] )
 
-            console.log (`NEWS-3.4: AFTER F1, sending the message '{2:"should not match"}'...`) 
-            proc.mailHandler ( {2:"should not match"} )
-                // User should never send messages like this.
-            console.log (proc.mailbox)
+            console.log (`NEWS-3.4: AFTER F1, sending the message '${m2}'...`) 
+            proc.mailHandler ( m2 ) // User should never send messages like this.
+            result.push ( [ ... proc.mailbox ] )
+            console.log ( [ ... proc.mailbox ] )
 
             console.log (`NEWS-3.4: AFTER F1, sending the message 'ohai'...`) 
-            proc.mailHandler ( 'ohai' )
-                // User should never send messages like this.
-            console.log (proc.mailbox)
+            proc.mailHandler ( 'ohai' ) // User should never send messages like this.
+            result.push ( [ ... proc.mailbox ] )
+            console.log ( [ ... proc.mailbox ] )
 
             console.log (`NEWS-3.4: AFTER F1, sending the message '()=>{}'...`) 
-            proc.mailHandler ( ()=>{} )
-                // User should never send messages like this.
-            console.log (proc.mailbox)
+            proc.mailHandler ( ()=>{} ) // User should never send messages like this.
+           // result.push ( [ ... proc.mailbox ] )
+            console.log ( [ ... proc.mailbox ] )
         }
         console.groupEnd ('3.4. During excution of spawn(F1) :')
-    }
+        return JSON.stringify ( result, SSON.replace, 2 )
+    },
+    want : JSON.stringify ( 
+        [   [   {1:"should not match"}  // first message (Object) received, not handled, left in mailbox
+            ],
+
+            [   {1:"should not match"}, // second message (Object) received, not handled, left in mailbox
+                {2:"should not match"}
+            ],
+
+            [   {1:"should not match"}, // third message (String) received, handled, cleared from mailbox
+                {2:"should not match"}
+            ],
+
+          //[   {1:"should not match"}, // fourth message (Function) received, handled, cleared from mailbox
+          //    {2:"should not match"}
+          //]
+        ],
+        SSON.replacer, 2 )
 },
 /*
 {   warning : `
