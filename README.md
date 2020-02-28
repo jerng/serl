@@ -16,7 +16,7 @@ reacts.
 [v0.0.1](https://github.com/jerng/serl/tree/v0.0.1)
 ([master](https://github.com/jerng/serl/tree/master)) - A documented
 proof-of-concept, where a single node can spawn multiple procs, and where a proc
-can recursively send >15,000 messages to another without blowing the stack. An
+can recursively send >25,000 messages to another without blowing the stack. An
 implementation of Erlang-style pattern matching is also demonstrated.
 
 v0.0.2 ([develop](https://github.com/jerng/serl/tree/develop)) - Aiming to

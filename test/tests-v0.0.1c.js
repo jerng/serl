@@ -5,7 +5,7 @@ import * as Exam from '../lib/classes/exam.js'
 new Exam.Exam ( {
     concerns : [
 
-{   test : `3.5 : how do processes send messages? (includes 15k message test
+{   test : `3.5 : how do processes send messages? (includes 25k message test
 site) (f1a,b,c,d,e, are mutually exclusive options for testing; you want to read
 the code... f1e is the most sophisticated option`,
     code : function () {
@@ -113,7 +113,7 @@ the code... f1e is the most sophisticated option`,
 
             let counter     = 0
             //let countToSend = 1     // shim
-            let countToSend = 15000 // do your 15k test here
+            let countToSend = 25000 // do your 25k test here
             while ( counter < countToSend ) 
             {
                 counter ++
@@ -179,7 +179,7 @@ Used JS Heap Size delta    : ${(globalThis.performance.memory.usedJSHeapSize - g
     want : 'vfun',      // THIS IS A HACK to get the test report to print nicely. See warning
     vfun : () => true   // THIS IS A HACK to get the test report to print nicely. See warning
 },
-{   warning : `3.5. Do your 15k test by uncommenting the relevant shim.`,
+{   warning : `3.5. Do your 25k test by uncommenting the relevant shim.`,
 },
 {   warning : `3.5, here f1bNamed makes a tail-call to itself, but it
 is not clear that this will not blow the call-stack; see note at f1bNamed;
