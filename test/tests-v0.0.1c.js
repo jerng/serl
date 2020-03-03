@@ -100,10 +100,11 @@ the code... f1e is the most sophisticated option`,
             ])
             globalThis.f1e_result.push ( `NEWS-3.5, f1e body, (awaited1e) value:
                 [[${awaited1e}]], type: [[${typeof awaited1e}]]; arguments
-                passed to f1e are: [[${arguments[0]}]], [[${arguments[1]}]]` ) 
+                passed to f1e are: [[${arguments[0]}]], [[${arguments[1]}]] but
+                these arguments are not used` ) 
         }
 
-        let f2      =   async function ( recipientPid ){
+        let f2      =    function ( recipientPid ){
 
             console.time('test 3.5')
 
@@ -112,8 +113,8 @@ the code... f1e is the most sophisticated option`,
             this.send ( recipientPid, 'ohai again' )
 
             let counter     = 0
-            //let countToSend = 1     // shim
-            let countToSend = 25000 // do your 25k test here
+            //let countToSend = 1     // shim: 1 test
+            let countToSend = 25000 // shim: 25k tests can be done here
             while ( counter < countToSend ) 
             {
                 counter ++
@@ -183,7 +184,10 @@ Used JS Heap Size delta    : ${(globalThis.performance.memory.usedJSHeapSize - g
 },
 {   warning : `3.5, here f1bNamed makes a tail-call to itself, but it
 is not clear that this will not blow the call-stack; see note at f1bNamed;
-check`,
+check; then note that f1e is called with Serl.recurse/2, which you will need to
+understand.`,
+},
+{   warning : `3.5. Of interest... note that f2 is synchronous, whereas f1e is asynchronous - you can spawn/n either variety of function.`,
 },
 
 
